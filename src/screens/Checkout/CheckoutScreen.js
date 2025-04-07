@@ -4,13 +4,16 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
   StyleSheet,
   Image,
   ScrollView,
   SafeAreaView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { firebase } from '../../../firebaseConfig';
+import { getDatabase, ref, set, push } from "firebase/database";
 
 const CheckoutScreen = ({ route, navigation }) => {
   const { cartItems } = route.params;
@@ -18,6 +21,11 @@ const CheckoutScreen = ({ route, navigation }) => {
   const [note, setNote] = useState("");
   const [shippingMethod, setShippingMethod] = useState("standard");
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Get current user ID - assume user is logged in
+  const currentUser = firebase.auth().currentUser;
+  const userId = currentUser ? currentUser.uid : 'guest';
 
   // Tính tổng tiền sản phẩm
   const calculateSubtotal = () => {
@@ -37,6 +45,89 @@ const CheckoutScreen = ({ route, navigation }) => {
   // Format tiền VND
   const formatCurrency = (amount) => {
     return amount.toLocaleString("vi-VN") + " ₫";
+  };
+
+  // Save order to Firebase Realtime Database
+  const saveOrderToFirebase = async () => {
+    setIsLoading(true);
+    try {
+      // Get database reference
+      const db = getDatabase();
+      
+      // Create a new order ID
+      const orderListRef = ref(db, 'orders');
+      const newOrderRef = push(orderListRef);
+      const orderId = newOrderRef.key;
+      
+      // Generate order details
+      const orderData = {
+        userId: userId,
+        orderItems: cartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        shippingMethod: shippingMethod,
+        shippingFee: getShippingFee(),
+        paymentMethod: paymentMethod,
+        subtotal: calculateSubtotal(),
+        total: calculateTotal(),
+        note: note,
+        discountCode: discountCode,
+        status: 'pending', // Initial order status
+        createdAt: new Date().toISOString(), // Use ISO string instead of FieldValue
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Save the order data
+      await set(newOrderRef, orderData);
+      
+      // Also save reference to user's orders
+      const userOrderRef = ref(db, `users/${userId}/orders/${orderId}`);
+      await set(userOrderRef, {
+        orderId: orderId,
+        total: calculateTotal(),
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      });
+
+      setIsLoading(false);
+      
+      // Navigate to success screen with order ID
+      navigation.navigate("OrderSuccessScreen", { 
+        orderId: orderId,
+        total: calculateTotal()
+      });
+      
+    } catch (error) {
+      setIsLoading(false);
+      Alert.alert(
+        "Lỗi",
+        "Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại sau.",
+        [{ text: "OK" }]
+      );
+      console.error("Error saving order: ", error);
+    }
+  };
+
+  const handlePlaceOrder = () => {
+    // Validate order if needed
+    if (cartItems.length === 0) {
+      Alert.alert("Lỗi", "Giỏ hàng của bạn đang trống");
+      return;
+    }
+    
+    // Confirm order
+    Alert.alert(
+      "Xác nhận đặt hàng",
+      `Bạn có chắc chắn muốn đặt đơn hàng với tổng tiền ${formatCurrency(calculateTotal())}?`,
+      [
+        { text: "Hủy", style: "cancel" },
+        { text: "Đặt hàng", onPress: saveOrderToFirebase }
+      ]
+    );
   };
 
   const renderPaymentMethod = (method, icon, label) => {
@@ -227,9 +318,14 @@ const CheckoutScreen = ({ route, navigation }) => {
         </View>
         <TouchableOpacity
           style={styles.checkoutButton}
-          onPress={() => navigation.navigate("OrderConfirmation")}
+          onPress={handlePlaceOrder}
+          disabled={isLoading}
         >
-          <Text style={styles.checkoutButtonText}>Đặt hàng</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.checkoutButtonText}>Đặt hàng</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

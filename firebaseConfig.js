@@ -1,14 +1,14 @@
-import { initializeApp } from "firebase/app";
-import { initializeAuth, getReactNativePersistence } from "firebase/auth";
+// firebaseConfig.js
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeAuth, getAuth, getReactNativePersistence } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 
 WebBrowser.maybeCompleteAuthSession();
 
-// Cấu hình Firebase
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDX6MhpcOj_mMvGV6NYYsfU4by29TNAYrE",
   authDomain: "admincosmetic-8f098.firebaseapp.com",
@@ -20,14 +20,28 @@ const firebaseConfig = {
   appId: "1:218027957302:web:bbbe2085cee23feee10c97",
 };
 
-// Khởi tạo Firebase
-const app = initializeApp(firebaseConfig);
+// Only initialize Firebase app once
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Sử dụng AsyncStorage để giữ trạng thái đăng nhập
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
+// Get Auth instance - only initialize if needed
+let auth;
+try {
+  auth = getAuth(app);
+} catch (error) {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+}
 
-// Xuất các dịch vụ Firebase để sử dụng trong dự án
-export { auth };
-export const database = getDatabase(app);
+// Initialize Realtime Database
+const database = getDatabase(app);
+
+// For compatibility with Firebase v8 style code
+const firebase = {
+  auth: () => auth,
+  database: () => database,
+  app: app
+};
+
+// Export Firebase services
+export { firebase, auth, database };

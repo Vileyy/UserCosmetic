@@ -1,0 +1,689 @@
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Alert
+} from "react-native";
+import { getAuth } from "firebase/auth";
+import { getDatabase, ref, onValue } from "firebase/database";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+
+const OrderDetailScreen = ({ route }) => {
+  const { orderId } = route.params;
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+  const auth = getAuth();
+
+  useEffect(() => {
+    const fetchOrderDetail = async () => {
+      try {
+        const userId = auth.currentUser.uid;
+        const database = getDatabase();
+        const orderRef = ref(database, `orders/${userId}/${orderId}`);
+        
+        onValue(orderRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            setOrder({ id: orderId, ...data });
+          } else {
+            Alert.alert("Lỗi", "Không tìm thấy thông tin đơn hàng.");
+            navigation.goBack();
+          }
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+        Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng. Vui lòng thử lại sau.");
+        setLoading(false);
+      }
+    };
+
+    fetchOrderDetail();
+  }, [orderId]);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "pending":
+        return "#f39c12"; // Vàng
+      case "processing":
+        return "#3498db"; // Xanh dương
+      case "shipped":
+        return "#2ecc71"; // Xanh lá
+      case "delivered":
+        return "#27ae60"; // Xanh lá đậm
+      case "cancelled":
+        return "#e74c3c"; // Đỏ
+      default:
+        return "#95a5a6"; // Xám
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case "pending": 
+        return "Chờ xác nhận";
+      case "processing":
+        return "Đang xử lý";
+      case "shipped":
+        return "Đang giao hàng";
+      case "delivered":
+        return "Đã giao hàng";
+      case "cancelled":
+        return "Đã hủy";
+      default:
+        return "Không xác định";
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "pending": 
+        return "time-outline";
+      case "processing":
+        return "construct-outline";
+      case "shipped":
+        return "car-outline";
+      case "delivered":
+        return "checkmark-circle-outline";
+      case "cancelled":
+        return "close-circle-outline";
+      default:
+        return "help-circle-outline";
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3498db" />
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Chi tiết đơn hàng</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      {/* Order Status Section */}
+      <View style={styles.statusSection}>
+        <View style={[styles.statusIcon, { backgroundColor: getStatusColor(order.status) }]}>
+          <Ionicons name={getStatusIcon(order.status)} size={24} color="white" />
+        </View>
+        <View style={styles.statusInfo}>
+          <Text style={styles.statusTitle}>{getStatusText(order.status)}</Text>
+          <Text style={styles.statusDescription}>
+            {order.status === "pending" && "Đơn hàng của bạn đang chờ xác nhận"}
+            {order.status === "processing" && "Đơn hàng của bạn đang được xử lý"}
+            {order.status === "shipped" && "Đơn hàng của bạn đang được giao"}
+            {order.status === "delivered" && "Đơn hàng của bạn đã được giao thành công"}
+            {order.status === "cancelled" && "Đơn hàng của bạn đã bị hủy"}
+          </Text>
+        </View>
+      </View>
+
+      {/* Order Timeline */}
+      {order.status !== "cancelled" && (
+        <View style={styles.timelineSection}>
+          <Text style={styles.sectionTitle}>Tiến trình đơn hàng</Text>
+          
+          <View style={styles.timeline}>
+            <TimelineItem 
+              title="Đặt hàng" 
+              time={new Date(order.orderDate).toLocaleString('vi-VN')} 
+              status="Hoàn thành" 
+              isActive={true}
+              isFirst={true}
+            />
+            
+            <TimelineItem 
+              title="Xác nhận" 
+              time={order.confirmedDate ? new Date(order.confirmedDate).toLocaleString('vi-VN') : "Đang chờ"} 
+              status={order.status !== "pending" ? "Hoàn thành" : "Đang chờ"} 
+              isActive={order.status !== "pending"}
+            />
+            
+            <TimelineItem 
+              title="Đang giao" 
+              time={order.shippedDate ? new Date(order.shippedDate).toLocaleString('vi-VN') : "Đang chờ"} 
+              status={order.status === "shipped" || order.status === "delivered" ? "Hoàn thành" : "Đang chờ"} 
+              isActive={order.status === "shipped" || order.status === "delivered"}
+            />
+            
+            <TimelineItem 
+              title="Đã giao" 
+              time={order.deliveredDate ? new Date(order.deliveredDate).toLocaleString('vi-VN') : "Đang chờ"} 
+              status={order.status === "delivered" ? "Hoàn thành" : "Đang chờ"} 
+              isActive={order.status === "delivered"}
+              isLast={true}
+            />
+          </View>
+        </View>
+      )}
+
+      {/* Order Information */}
+      <View style={styles.infoSection}>
+        <Text style={styles.sectionTitle}>Thông tin đơn hàng</Text>
+        
+        <View style={styles.infoCard}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Mã đơn hàng</Text>
+            <Text style={styles.infoValue}>#{order.id.slice(-6)}</Text>
+          </View>
+          
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Ngày đặt hàng</Text>
+            <Text style={styles.infoValue}>{new Date(order.orderDate).toLocaleDateString('vi-VN')}</Text>
+          </View>
+          
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Phương thức thanh toán</Text>
+            <Text style={styles.infoValue}>{order.paymentMethod === "cod" ? "Thanh toán khi nhận hàng" : "Thanh toán online"}</Text>
+          </View>
+          
+          {order.paymentStatus && (
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Trạng thái thanh toán</Text>
+              <View style={styles.paymentStatus}>
+                <View style={[styles.statusDot, { backgroundColor: order.paymentStatus === "paid" ? "#2ecc71" : "#f39c12" }]} />
+                <Text style={styles.infoValue}>{order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Shipping Information */}
+      <View style={styles.infoSection}>
+        <Text style={styles.sectionTitle}>Thông tin giao hàng</Text>
+        
+        <View style={styles.infoCard}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Người nhận</Text>
+            <Text style={styles.infoValue}>{order.shippingAddress.name}</Text>
+          </View>
+          
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Số điện thoại</Text>
+            <Text style={styles.infoValue}>{order.shippingAddress.phone}</Text>
+          </View>
+          
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Địa chỉ</Text>
+            <Text style={styles.infoValue}>
+              {order.shippingAddress.address}, {order.shippingAddress.district}, {order.shippingAddress.city}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Order Items */}
+      <View style={styles.itemsSection}>
+        <Text style={styles.sectionTitle}>Sản phẩm đã mua</Text>
+        
+        {order.items && order.items.map((item, index) => (
+          <View key={index} style={styles.productItem}>
+            <Image 
+              source={{ uri: item.image || "https://via.placeholder.com/60" }} 
+              style={styles.productImage} 
+            />
+            
+            <View style={styles.productInfo}>
+              <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
+              <Text style={styles.productPrice}>{item.price.toLocaleString('vi-VN')} đ</Text>
+              <Text style={styles.productQuantity}>x{item.quantity}</Text>
+            </View>
+            
+            <Text style={styles.productTotal}>
+              {(item.price * item.quantity).toLocaleString('vi-VN')} đ
+            </Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Order Summary */}
+      <View style={styles.summarySection}>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Tạm tính</Text>
+          <Text style={styles.summaryValue}>{order.subtotal?.toLocaleString('vi-VN')} đ</Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Phí vận chuyển</Text>
+          <Text style={styles.summaryValue}>{order.shippingFee?.toLocaleString('vi-VN')} đ</Text>
+        </View>
+        
+        {order.discount > 0 && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Giảm giá</Text>
+            <Text style={styles.discountValue}>-{order.discount?.toLocaleString('vi-VN')} đ</Text>
+          </View>
+        )}
+        
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>Tổng cộng</Text>
+          <Text style={styles.totalValue}>{order.totalAmount?.toLocaleString('vi-VN')} đ</Text>
+        </View>
+      </View>
+
+      {/* Action Buttons */}
+      <View style={styles.actionSection}>
+        {order.status === "pending" && (
+          <TouchableOpacity style={styles.cancelButton} onPress={() => Alert.alert("Thông báo", "Tính năng hủy đơn hàng đang được phát triển")}>
+            <Text style={styles.cancelButtonText}>Hủy đơn hàng</Text>
+          </TouchableOpacity>
+        )}
+        
+        {order.status === "delivered" && (
+          <TouchableOpacity style={styles.reviewButton} onPress={() => navigation.navigate("WriteReview", { orderId: order.id })}>
+            <Text style={styles.reviewButtonText}>Đánh giá sản phẩm</Text>
+          </TouchableOpacity>
+        )}
+        
+        <TouchableOpacity style={styles.supportButton} onPress={() => navigation.navigate("CustomerSupport", { orderId: order.id })}>
+          <Ionicons name="chatbubble-ellipses-outline" size={16} color="white" style={styles.buttonIcon} />
+          <Text style={styles.supportButtonText}>Liên hệ hỗ trợ</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+};
+
+// TimelineItem Component
+const TimelineItem = ({ title, time, status, isActive, isFirst = false, isLast = false }) => {
+  return (
+    <View style={styles.timelineItem}>
+      <View style={styles.timelineLeft}>
+        <View style={[
+          styles.timelinePoint, 
+          isActive ? styles.activePoint : styles.inactivePoint
+        ]} />
+        
+        {!isLast && (
+          <View style={[
+            styles.timelineLine, 
+            isActive ? styles.activeLine : styles.inactiveLine
+          ]} />
+        )}
+      </View>
+      
+      <View style={styles.timelineContent}>
+        <Text style={styles.timelineTitle}>{title}</Text>
+        <Text style={styles.timelineTime}>{time}</Text>
+        <Text style={[
+          styles.timelineStatus,
+          { color: status === "Hoàn thành" ? "#2ecc71" : "#f39c12" }
+        ]}>
+          {status}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8f8f8",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f8f8", 
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "white",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 32,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  
+  // Status Section
+  statusSection: {
+    backgroundColor: "white",
+    padding: 16,
+    marginTop: 16,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statusIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  statusInfo: {
+    flex: 1,
+  },
+  statusTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#2c3e50",
+    marginBottom: 4,
+  },
+  statusDescription: {
+    fontSize: 14,
+    color: "#7f8c8d",
+  },
+  
+  // Timeline Section
+  timelineSection: {
+    backgroundColor: "white",
+    padding: 16,
+    marginTop: 16,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#2c3e50",
+    marginBottom: 16,
+  },
+  timeline: {
+    marginLeft: 8,
+  },
+  timelineItem: {
+    flexDirection: "row",
+    marginBottom: 16,
+  },
+  timelineLeft: {
+    alignItems: "center",
+    width: 24,
+  },
+  timelinePoint: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 12,
+    zIndex: 1,
+  },
+  activePoint: {
+    backgroundColor: "#3498db",
+  },
+  inactivePoint: {
+    backgroundColor: "#ecf0f1",
+    borderWidth: 1,
+    borderColor: "#bdc3c7",
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    marginVertical: -4,
+    zIndex: 0,
+  },
+  activeLine: {
+    backgroundColor: "#3498db",
+  },
+  inactiveLine: {
+    backgroundColor: "#ecf0f1",
+  },
+  timelineContent: {
+    flex: 1,
+    paddingBottom: 8,
+  },
+  timelineTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#2c3e50",
+    marginBottom: 4,
+  },
+  timelineTime: {
+    fontSize: 14,
+    color: "#7f8c8d",
+    marginBottom: 2,
+  },
+  timelineStatus: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  
+// Info Section
+  infoSection: {
+    backgroundColor: "white",
+    padding: 16,
+    marginTop: 16,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  infoCard: {
+    backgroundColor: "#f9f9f9",
+    padding: 12,
+    borderRadius: 8,
+  },
+  infoItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: "#7f8c8d",
+  },
+  infoValue: {
+    fontSize: 14,
+    color: "#2c3e50",
+    fontWeight: "500",
+    flex: 1,
+    textAlign: "right",
+  },
+  paymentStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 4,
+  },
+  
+  // Items Section
+  itemsSection: {
+    backgroundColor: "white",
+    padding: 16,
+    marginTop: 16,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  productItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  productImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
+  },
+  productInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  productName: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#2c3e50",
+    marginBottom: 4,
+  },
+  productPrice: {
+    fontSize: 13,
+    color: "#7f8c8d",
+    marginBottom: 2,
+  },
+  productQuantity: {
+    fontSize: 13,
+    color: "#7f8c8d",
+  },
+  productTotal: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#2c3e50",
+    marginLeft: 12,
+  },
+  
+  // Summary Section
+  summarySection: {
+    backgroundColor: "white",
+    padding: 16,
+    marginTop: 16,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: "#7f8c8d",
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: "#2c3e50",
+    fontWeight: "500",
+  },
+  discountValue: {
+    fontSize: 14,
+    color: "#e74c3c",
+    fontWeight: "500",
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    marginTop: 8,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#2c3e50",
+  },
+  totalValue: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#e74c3c",
+  },
+  
+  // Action Section
+  actionSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 16,
+    marginHorizontal: 16,
+    marginBottom: 24,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "white",
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e74c3c",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  cancelButtonText: {
+    color: "#e74c3c",
+    fontWeight: "bold",
+  },
+  reviewButton: {
+    flex: 1,
+    backgroundColor: "white",
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#f39c12",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  reviewButtonText: {
+    color: "#f39c12",
+    fontWeight: "bold",
+  },
+  supportButton: {
+    flex: 1,
+    backgroundColor: "#3498db",
+    paddingVertical: 12,
+    borderRadius: 8,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonIcon: {
+    marginRight: 6,
+  },
+  supportButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+});
+
+export default OrderDetailScreen;

@@ -13,6 +13,9 @@ import ExploreScreen from "../screens/BottomTabs/ExploreScreen";
 import UserInfoScreen from "../screens/Profile/UserInfoScreen";
 import ChangePasswordScreen from "../screens/Profile/ChangePasswordScreen";
 import CheckoutScreen from "../screens/Checkout/CheckoutScreen";
+import OrderSuccessScreen from "../screens/Checkout/OrderSuccessScreen";
+import OrderStatusScreen from "../screens/Order/OrderStatusScreen";
+import OrderTrackingScreen from "../screens/Order/OrderTrackingScreen";
 
 const Stack = createStackNavigator();
 
@@ -41,6 +44,13 @@ const AppNavigator = () => {
             component={ChangePasswordScreen}
           />
           <Stack.Screen name="Checkout" component={CheckoutScreen} />
+          <Stack.Screen
+            name="OrderSuccessScreen"
+            component={OrderSuccessScreen}
+            options={{ headerShown: true, title: "Đặt hàng thành công" }}
+          />
+          <Stack.Screen name="OrderStatus" component={OrderStatusScreen} />
+          <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </CartProvider>

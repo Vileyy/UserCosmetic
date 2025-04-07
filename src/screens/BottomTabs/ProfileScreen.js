@@ -82,6 +82,11 @@ const ProfileScreen = () => {
           onPress={() => navigation.navigate("OrderHistory")}
         />
         <ProfileItem
+          icon="document-text-outline"
+          label="Tình trạng đơn hàng"
+          onPress={() => navigation.navigate("OrderStatus")}
+        />
+        <ProfileItem
           icon="log-out-outline"
           label="Đăng xuất"
           color="red"
