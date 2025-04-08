@@ -84,13 +84,21 @@ const CheckoutScreen = ({ route, navigation }) => {
       // Save the order data
       await set(newOrderRef, orderData);
       
-      // Also save reference to user's orders
+      // Also save reference to user's orders with items info for direct access
       const userOrderRef = ref(db, `users/${userId}/orders/${orderId}`);
       await set(userOrderRef, {
         orderId: orderId,
         total: calculateTotal(),
         status: 'pending',
         createdAt: new Date().toISOString(),
+        // Add items information here for direct access
+        items: cartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
       });
 
       setIsLoading(false);

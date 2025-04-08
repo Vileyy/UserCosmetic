@@ -16,6 +16,7 @@ import CheckoutScreen from "../screens/Checkout/CheckoutScreen";
 import OrderSuccessScreen from "../screens/Checkout/OrderSuccessScreen";
 import OrderStatusScreen from "../screens/Order/OrderStatusScreen";
 import OrderTrackingScreen from "../screens/Order/OrderTrackingScreen";
+import OrderDetailScreen from "../screens/Order/OrderDetailScreen";
 
 const Stack = createStackNavigator();
 
@@ -51,6 +52,7 @@ const AppNavigator = () => {
           />
           <Stack.Screen name="OrderStatus" component={OrderStatusScreen} />
           <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
+          <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </CartProvider>
