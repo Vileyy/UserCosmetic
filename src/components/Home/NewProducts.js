@@ -26,7 +26,7 @@ export default function NewProducts() {
             id: key,
             ...data[key],
           }))
-          .filter((item) => item.category === "new_products"); // ✅ Chỉ lấy sản phẩm có category = "new_products"
+          .filter((item) => item.category === "new_product"); 
 
         setProducts(productList);
       } else {
@@ -76,6 +76,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 10,
     marginTop: 10,
+    marginBottom: 30,
   },
   title: {
     fontSize: 20,

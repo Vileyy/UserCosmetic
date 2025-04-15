@@ -175,8 +175,8 @@ const ProductDetailScreen = ({ route, navigation }) => {
                 color="#666"
                 style={styles.deliveryIcon}
               />
-              <Text style={styles.deliveryTitle}>Giao đến:</Text>
-              <Text style={styles.deliveryValue}>Quận 1, TP.HCM</Text>
+              <Text style={styles.deliveryTitle}>Địa điểm chi nhánh:</Text>
+              <Text style={styles.deliveryValue}>82 Hồ Tùng Mậu, P.Bến Nghé, Q.1, TP.HCM</Text>
               <Ionicons name="chevron-forward" size={16} color="#F08080" />
             </View>
 
@@ -205,7 +205,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Thông tin chi tiết</Text>
             <View style={styles.specRow}>
               <Text style={styles.specLabel}>Thương hiệu</Text>
-              <Text style={styles.specValue}>ACME</Text>
+              <Text style={styles.specValue}>Halora</Text>
             </View>
             <View style={styles.specRow}>
               <Text style={styles.specLabel}>Xuất xứ</Text>

@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
   },
   btn_register: {
-    backgroundColor: "pink",
+    backgroundColor: "#FF6699",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
@@ -183,10 +183,10 @@ const styles = StyleSheet.create({
   text: {
     textAlign: "center",
     marginTop: 15,
-    color: "#555",
+    color: "black",
   },
   link: {
-    color: "black",
+    color: "#FF6699",
     fontWeight: "bold",
   },
 });

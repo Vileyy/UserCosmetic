@@ -207,24 +207,24 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   btnLogin: {
-    backgroundColor: "pink",
+    backgroundColor: "#FF6699",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
     marginTop: 10,
   },
   btnText: {
-    color: "black",
+    color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
   text: {
     textAlign: "center",
     marginTop: 15,
-    color: "#555",
+    color: "black",
   },
   link: {
-    color: "black",
+    color: "#FF6699",
     fontWeight: "bold",
   },
   socialContainer: {

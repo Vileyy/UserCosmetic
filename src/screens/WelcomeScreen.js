@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   btn_login: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#FF6699",
     paddingVertical: 12,
     paddingHorizontal: 100,
     borderRadius: 8,
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     color: "white",
   },
   register_link: {
-    color: "#003cff",
+    color: "#FF6699",
     fontWeight: "bold",
   },
 });
