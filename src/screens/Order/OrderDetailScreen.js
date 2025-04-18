@@ -67,6 +67,8 @@ const OrderDetailScreen = ({ route }) => {
     outputRange: [0, 1],
   });
 
+  // ⚠️ Đây là phiên bản chính thức đã sửa để ưu tiên đọc dữ liệu đúng từ Firebase (users/{userId}/orders/{orderId})
+
   useEffect(() => {
     const fetchOrderDetail = async () => {
       try {
@@ -78,15 +80,13 @@ const OrderDetailScreen = ({ route }) => {
         }
 
         const userId = auth.currentUser.uid;
-        console.log(`Fetching order: ${orderId} for user: ${userId}`);
-
         const database = getDatabase();
 
-        // Try to fetch from multiple possible paths
+        // ✅ Ưu tiên đọc đúng node người dùng
         const paths = [
-          `orders/${userId}/${orderId}`,
-          `orders/${orderId}`,
-          `users/${userId}/orders/${orderId}`,
+          `users/${userId}/orders/${orderId}`, // <-- Ưu tiên 1
+          `orders/${userId}/${orderId}`, // <-- Ưu tiên 2 nếu có
+          `orders/${orderId}`, // <-- Ưu tiên 3
         ];
 
         let foundData = false;
@@ -94,21 +94,42 @@ const OrderDetailScreen = ({ route }) => {
         for (const path of paths) {
           console.log(`Trying path: ${path}`);
           const orderRef = ref(database, path);
+          const snapshot = await get(orderRef);
+          const data = snapshot.val();
 
-          try {
-            // Use get() instead of onValue for more control
-            const snapshot = await get(orderRef);
-            const data = snapshot.val();
+          if (data) {
+            console.log(`Found data at path: ${path}`);
+            console.log("Order data:", data);
 
-            if (data) {
-              console.log(`Found data at path: ${path}`);
-              console.log("Order data:", data);
-              setOrder({ id: orderId, path: path, ...data });
-              foundData = true;
-              break;
+            // ✅ Auto bổ sung các mốc thời gian nếu cần
+            const updates = {};
+            const now = new Date().toISOString();
+
+            if (data.status === "processing" && !data.confirmedDate) {
+              updates.confirmedDate = now;
+              data.confirmedDate = now;
             }
-          } catch (err) {
-            console.log(`Error fetching from ${path}:`, err);
+
+            if (
+              (data.status === "shipped" || data.status === "delivered") &&
+              !data.shippedDate
+            ) {
+              updates.shippedDate = now;
+              data.shippedDate = now;
+            }
+
+            if (data.status === "delivered" && !data.deliveredDate) {
+              updates.deliveredDate = now;
+              data.deliveredDate = now;
+            }
+
+            if (Object.keys(updates).length > 0) {
+              await update(orderRef, updates);
+            }
+
+            setOrder({ id: orderId, path, ...data });
+            foundData = true;
+            break;
           }
         }
 

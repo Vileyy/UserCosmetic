@@ -48,6 +48,14 @@ const UserInfoScreen = () => {
           setPhone(data.phone || "");
           setAddress(data.address || "");
           setGender(data.gender || "Nam");
+          // If displayName is not in auth, try to get from database
+          if (!user.displayName && data.displayName) {
+            setDisplayName(data.displayName);
+          }
+          // If photoURL is not in auth, try to get from database
+          if (!user.photoURL && data.photoURL) {
+            setPhotoURL(data.photoURL);
+          }
         }
       });
     }
@@ -66,28 +74,36 @@ const UserInfoScreen = () => {
     }
   };
 
-  const handleUpdateProfile = () => {
+  const handleUpdateProfile = async () => {
     if (!user) {
       Alert.alert("Lỗi", "Bạn chưa đăng nhập!");
       return;
     }
 
-    updateProfile(user, { displayName, photoURL })
-      .then(() => {
-        updateEmail(user, email)
-          .then(() => {
-            const userRef = ref(db, `users/${user.uid}`);
-            set(userRef, { phone, address, gender })
-              .then(() =>
-                Alert.alert("Thành công", "Cập nhật thông tin thành công!")
-              )
-              .catch((error) =>
-                Alert.alert("Lỗi cập nhật dữ liệu!", error.message)
-              );
-          })
-          .catch((error) => Alert.alert("Lỗi cập nhật email!", error.message));
-      })
-      .catch((error) => Alert.alert("Lỗi cập nhật hồ sơ!", error.message));
+    try {
+      // First update the auth profile
+      await updateProfile(user, { displayName, photoURL });
+      
+      // Then update email if it's different
+      if (email !== user.email) {
+        await updateEmail(user, email);
+      }
+      
+      // Finally, save ALL user data to the database
+      const userRef = ref(db, `users/${user.uid}`);
+      await set(userRef, {
+        displayName,   // Store displayName in database too
+        photoURL,      // Store photoURL in database too
+        email,         // Store email in database
+        phone,
+        address,
+        gender
+      });
+      
+      Alert.alert("Thành công", "Cập nhật thông tin thành công!");
+    } catch (error) {
+      Alert.alert("Lỗi", error.message);
+    }
   };
 
   return (
