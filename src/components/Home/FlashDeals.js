@@ -12,8 +12,8 @@ import { useNavigation } from "@react-navigation/native";
 
 const FlashDeals = () => {
   const [flashDeals, setFlashDeals] = useState([]);
-  const [countdown, setCountdown] = useState(3600); // 1 giờ (3600 giây)
-  const navigation = useNavigation(); // ✅ Điều hướng
+  const [countdown, setCountdown] = useState(3600); 
+  const navigation = useNavigation(); 
 
   useEffect(() => {
     const db = getDatabase();
@@ -54,7 +54,7 @@ const FlashDeals = () => {
     }
   }, [countdown]);
 
-  // ✅ Xử lý khi bấm vào sản phẩm
+  //Xử lý khi bấm vào sản phẩm
   const handlePress = (product) => {
     navigation.navigate("ProductDetailScreen", { product });
   };
@@ -119,12 +119,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#333",
-    marginRight: 8, // 📌 Tạo khoảng cách với đồng hồ
+    marginRight: 8, 
   },
   timer: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "red", // 📌 Màu đỏ để thu hút sự chú ý
+    color: "red", 
   },
   viewAll: {
     fontSize: 16,

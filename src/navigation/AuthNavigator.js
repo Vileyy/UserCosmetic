@@ -19,6 +19,7 @@ import OrderTrackingScreen from "../screens/Order/OrderTrackingScreen";
 import OrderDetailScreen from "../screens/Order/OrderDetailScreen";
 import OrderHistoryScreen from "../screens/Profile/OrderHistoryScreen";
 
+
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
@@ -39,7 +40,11 @@ const AppNavigator = () => {
             name="ProductDetailScreen"
             component={ProductDetailScreen}
           />
+
+          {/* Cart */}
           <Stack.Screen name="Cart" component={CartScreen} />
+
+          {/* Profile */}
           <Stack.Screen name="UserInfo" component={UserInfoScreen} />
           <Stack.Screen
             name="ChangePassword"

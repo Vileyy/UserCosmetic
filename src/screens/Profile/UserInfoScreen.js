@@ -18,6 +18,7 @@ import { getDatabase, ref, set, get } from "firebase/database";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { uploadToCloudinary } from "../../utils/uploadImage"; // Đường dẫn đến hàm uploadToCloudinary
 
 const PRIMARY_COLOR = "#F08080";
 const SECONDARY_COLOR = "#F08080";
@@ -48,11 +49,10 @@ const UserInfoScreen = () => {
           setPhone(data.phone || "");
           setAddress(data.address || "");
           setGender(data.gender || "Nam");
-          // If displayName is not in auth, try to get from database
+
           if (!user.displayName && data.displayName) {
             setDisplayName(data.displayName);
           }
-          // If photoURL is not in auth, try to get from database
           if (!user.photoURL && data.photoURL) {
             setPhotoURL(data.photoURL);
           }
@@ -70,7 +70,13 @@ const UserInfoScreen = () => {
     });
 
     if (!result.canceled) {
-      setPhotoURL(result.assets[0].uri);
+      const localUri = result.assets[0].uri;
+      const cloudinaryUrl = await uploadToCloudinary(localUri);
+      if (cloudinaryUrl) {
+        setPhotoURL(cloudinaryUrl);
+      } else {
+        Alert.alert("Lỗi", "Tải ảnh lên không thành công.");
+      }
     }
   };
 
@@ -81,25 +87,21 @@ const UserInfoScreen = () => {
     }
 
     try {
-      // First update the auth profile
       await updateProfile(user, { displayName, photoURL });
-      
-      // Then update email if it's different
       if (email !== user.email) {
         await updateEmail(user, email);
       }
-      
-      // Finally, save ALL user data to the database
+
       const userRef = ref(db, `users/${user.uid}`);
       await set(userRef, {
-        displayName,   // Store displayName in database too
-        photoURL,      // Store photoURL in database too
-        email,         // Store email in database
+        displayName,
+        photoURL,
+        email,
         phone,
         address,
-        gender
+        gender,
       });
-      
+
       Alert.alert("Thành công", "Cập nhật thông tin thành công!");
     } catch (error) {
       Alert.alert("Lỗi", error.message);
@@ -109,7 +111,6 @@ const UserInfoScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardAvoidingView}
@@ -117,9 +118,7 @@ const UserInfoScreen = () => {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Thông tin cá nhân</Text>
-            <Text style={styles.headerSubtitle}>
-              Cập nhật thông tin của bạn
-            </Text>
+            <Text style={styles.headerSubtitle}>Cập nhật thông tin của bạn</Text>
           </View>
 
           <View style={styles.profileSection}>
@@ -135,6 +134,7 @@ const UserInfoScreen = () => {
               </TouchableOpacity>
             </View>
 
+            {/* Các input */}
             <View style={styles.inputSection}>
               <Text style={styles.label}>Tên hiển thị</Text>
               <TextInput
@@ -177,7 +177,6 @@ const UserInfoScreen = () => {
               />
             </View>
 
-            {/* Chọn giới tính */}
             <View style={styles.inputSection}>
               <Text style={styles.label}>Giới tính</Text>
               <View style={styles.genderContainer}>
@@ -204,10 +203,7 @@ const UserInfoScreen = () => {
             </View>
           </View>
 
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleUpdateProfile}
-          >
+          <TouchableOpacity style={styles.saveButton} onPress={handleUpdateProfile}>
             <LinearGradient
               colors={[PRIMARY_COLOR, SECONDARY_COLOR]}
               style={styles.buttonGradient}

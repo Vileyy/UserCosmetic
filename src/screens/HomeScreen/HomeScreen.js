@@ -20,8 +20,8 @@ import NewProducts from "../../components/Home/NewProducts";
 
 const HomeScreen = () => {
   const [search, setSearch] = useState("");
-  const [products, setProducts] = useState([]); // Danh sách sản phẩm từ Firebase
-  const [suggestions, setSuggestions] = useState([]); // Gợi ý sản phẩm khi nhập
+  const [products, setProducts] = useState([]); 
+  const [suggestions, setSuggestions] = useState([]); 
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -41,12 +41,12 @@ const HomeScreen = () => {
     });
   }, []);
 
-  // 📌 Tạo danh sách gợi ý khi nhập
+  //Tạo danh sách gợi ý khi nhập
   const handleSearchChange = (text) => {
     setSearch(text);
 
     if (!text.trim()) {
-      setSuggestions([]); // Xóa gợi ý nếu không có nội dung
+      setSuggestions([]); //Xóa gợi ý nếu không có nội dung
       return;
     }
 
@@ -57,7 +57,7 @@ const HomeScreen = () => {
     setSuggestions(filtered.slice(0, 5)); // Giới hạn hiển thị 5 gợi ý
   };
 
-  // 📌 Xử lý khi nhấn Enter
+  //Xử lý khi nhấn Enter
   const handleSearchSubmit = () => {
     if (search.trim()) {
       setSuggestions([]); // Ẩn danh sách gợi ý khi tìm kiếm
@@ -65,13 +65,13 @@ const HomeScreen = () => {
     }
   };
 
-  // 📌 Xử lý khi nhấn vào sản phẩm trong danh sách gợi ý
+  //Xử lý khi nhấn vào sản phẩm trong danh sách gợi ý
   const handleProductSelect = (product) => {
     setSuggestions([]); // Ẩn gợi ý
     navigation.navigate("ProductDetailScreen", { product }); // Chuyển sang trang chi tiết sản phẩm
   };
 
-  // 📌 Hàm xử lý tiền VND
+  //Hàm xử lý tiền VND
   const formatCurrency = (price) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -86,7 +86,7 @@ const HomeScreen = () => {
       {/* Thanh Header */}
       <Header
         search={search}
-        setSearch={handleSearchChange} // Gọi hàm mới để cập nhật gợi ý
+        setSearch={handleSearchChange} 
         handleSearchSubmit={handleSearchSubmit}
       />
 
@@ -99,7 +99,7 @@ const HomeScreen = () => {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.suggestionItem}
-                onPress={() => handleProductSelect(item)} // Chuyển sang trang chi tiết sản phẩm
+                onPress={() => handleProductSelect(item)} 
               >
                 <Image
                   source={{ uri: item.image }}
