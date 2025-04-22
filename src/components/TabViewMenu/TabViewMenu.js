@@ -139,7 +139,7 @@ const TabViewMenu = ({ isVisible, onClose }) => {
     }
   };
 
-  // Danh sách các mục menu - định nghĩa sau khi đã có hàm handleLogout
+  // Danh sách các mục menu 
   const menuItems = [
     { icon: "home-outline", label: "Trang chủ", navigate: "Home" },
     { icon: "person-outline", label: "Tài khoản", navigate: "UserInfo" },
@@ -162,7 +162,6 @@ const TabViewMenu = ({ isVisible, onClose }) => {
 
   return (
     <View style={styles.container} pointerEvents="box-none">
-      {/* Overlay */}
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View
           style={[
