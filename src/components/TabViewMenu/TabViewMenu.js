@@ -145,7 +145,7 @@ const TabViewMenu = ({ isVisible, onClose }) => {
     { icon: "person-outline", label: "Tài khoản", navigate: "UserInfo" },
     { icon: "cart-outline", label: "Giỏ hàng", navigate: "Cart" },
     { icon: "time-outline", label: "Lịch sử đơn hàng", navigate: "OrderHistory" },
-    { icon: "log-out-outline", label: "Đăng xuất", type: "logout" },
+    // { icon: "log-out-outline", label: "Đăng xuất", type: "logout" },
   ];
   
   // Render một item menu
@@ -355,6 +355,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
     width: "100%",
+    marginBottom: 80,
   },
   logoutButton: {
     backgroundColor: "#F08080",

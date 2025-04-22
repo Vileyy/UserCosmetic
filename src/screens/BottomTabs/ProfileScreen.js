@@ -9,16 +9,28 @@ import {
   Alert,
 } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
+import { getDatabase, ref, onValue } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
 const ProfileScreen = () => {
-  const [user, setUser] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
   const navigation = useNavigation();
   const auth = getAuth();
+  const db = getDatabase();
 
   useEffect(() => {
-    setUser(auth.currentUser);
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const userRef = ref(db, `users/${currentUser.uid}`);
+      const unsubscribe = onValue(userRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setUserInfo(snapshot.val());
+        }
+      });
+
+      return () => unsubscribe(); // cleanup listener
+    }
   }, []);
 
   const handleLogout = () => {
@@ -53,14 +65,18 @@ const ProfileScreen = () => {
       {/* Profile Card */}
       <View style={styles.profileCard}>
         <Image
-          source={{ uri: user?.photoURL || "https://via.placeholder.com/100" }}
+          source={{
+            uri: userInfo?.photoURL || "https://via.placeholder.com/100",
+          }}
           style={styles.avatar}
         />
         <View>
           <Text style={styles.userName}>
-            {user?.displayName || "Người dùng"}
+            {userInfo?.displayName || "Người dùng"}
           </Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
+          <Text style={styles.userEmail}>
+            {auth.currentUser?.email || "Không rõ email"}
+          </Text>
         </View>
       </View>
 

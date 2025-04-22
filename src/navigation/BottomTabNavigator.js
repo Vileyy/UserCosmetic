@@ -20,7 +20,7 @@ const Tab = createBottomTabNavigator();
 const { width } = Dimensions.get("window");
 const height = 70;
 
-// **Vẽ đường cong của Bottom Tab**
+// Vẽ đường cong của Bottom Tab
 const CustomTabBackground = ({ color }) => {
   const d = `
     M0,0 
@@ -39,7 +39,7 @@ const CustomTabBackground = ({ color }) => {
   );
 };
 
-// **Custom Button ở giữa**
+// Custom Button ở giữa
 const CustomAddButton = ({ onPress }) => {
   // Thêm animation cho nút giữa
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -99,30 +99,19 @@ const CustomAddButton = ({ onPress }) => {
   );
 };
 
-// **Component Animated Icon - Nâng cấp với nhiều hiệu ứng hơn**
+// Component Tab Icon với background được nâng lên khi focus
 const AnimatedTabIcon = ({ name, focused }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const translateYAnim = useRef(new Animated.Value(0)).current;
+  const backgroundScaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0.7)).current;
-
-  // Animation cho icon label
-  const labelPositionAnim = useRef(new Animated.Value(0)).current;
   const labelOpacityAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
-      // Animation scale
-      Animated.spring(scaleAnim, {
-        toValue: focused ? 1.2 : 1.0,
+      // Animation scale cho background
+      Animated.spring(backgroundScaleAnim, {
+        toValue: focused ? 1 : 0,
         useNativeDriver: true,
         friction: 5,
-        tension: 50,
-      }),
-      // Animation di chuyển lên
-      Animated.spring(translateYAnim, {
-        toValue: focused ? -10 : 0,
-        useNativeDriver: true,
-        friction: 6,
         tension: 50,
       }),
       // Animation độ mờ
@@ -137,62 +126,52 @@ const AnimatedTabIcon = ({ name, focused }) => {
         duration: 200,
         useNativeDriver: true,
       }),
-      Animated.spring(labelPositionAnim, {
-        toValue: focused ? 1 : 0,
-        useNativeDriver: true,
-        friction: 7,
-      }),
     ]).start();
   }, [focused]);
 
-  // Label position
-  const labelTranslateY = labelPositionAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [10, 0],
-  });
-
-  // Tạo hiệu ứng glow khi được chọn
-  const glowStyle = focused
-    ? {
-        shadowColor: "#ff4081",
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-      }
-    : {};
-
   return (
-    <View style={{ alignItems: "center", width: 60 }}>
-      <Animated.View
-        style={[
-          {
-            transform: [{ scale: scaleAnim }, { translateY: translateYAnim }],
-            opacity: opacityAnim,
-          },
-          glowStyle,
-        ]}
-      >
-        <Ionicons name={name} size={28} color={focused ? "#ff4081" : "#888"} />
-      </Animated.View>
+    <View style={{ alignItems: "center", width: 60, justifyContent: "center" }}>
+      <View style={{ height: 50, alignItems: "center", justifyContent: "center" }}>
+        {/* Background được nâng lên khi focus */}
+        <Animated.View
+          style={{
+            position: "absolute",
+            width: 50,
+            height: 50,
+            borderRadius: 25,
+            backgroundColor: "#fff1f7",
+            transform: [{ scale: backgroundScaleAnim }],
+            opacity: backgroundScaleAnim,
+          }}
+        />
+        
+        {/* Icon */}
+        <Animated.View style={{ opacity: opacityAnim }}>
+          <Ionicons 
+            name={name} 
+            size={28} 
+            color={focused ? "#ff4081" : "#888"} 
+          />
+        </Animated.View>
+      </View>
 
-      {/* Label cho icon (tùy chọn hiển thị) */}
+      {/* Label cho icon */}
       {focused && (
         <Animated.Text
           style={{
             fontSize: 10,
             color: "#ff4081",
             fontWeight: "bold",
-            marginTop: 4,
+            marginTop: 2,
             opacity: labelOpacityAnim,
-            transform: [{ translateY: labelTranslateY }],
           }}
         >
           {name === "home-outline"
             ? "HOME"
             : name === "search-outline"
             ? "SEARCH"
-            : name === "heart-outline"
-            ? "LIKES"
+            : name === "notifications-outline"
+            ? "ALERTS"
             : "PROFILE"}
         </Animated.Text>
       )}
@@ -273,7 +252,7 @@ const BottomTabNavigator = () => {
   );
 };
 
-// **Style**
+// Style
 const styles = StyleSheet.create({
   tabBackground: {
     position: "absolute",

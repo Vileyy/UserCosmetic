@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,68 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import { registerUser } from "../services/authService";
 import Toast from "react-native-toast-message";
+
+// Component cho input với nhãn nổi
+const FloatingLabelInput = ({ label, value, onChangeText, secureTextEntry, keyboardType }) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const animatedIsFocused = new Animated.Value(value ? 1 : 0);
+
+  useEffect(() => {
+    Animated.timing(animatedIsFocused, {
+      toValue: (isFocused || value) ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused, value, animatedIsFocused]);
+
+  const labelStyle = {
+    position: 'absolute',
+    left: 15,
+    top: animatedIsFocused.interpolate({
+      inputRange: [0, 1],
+      outputRange: [15, -10],
+    }),
+    fontSize: animatedIsFocused.interpolate({
+      inputRange: [0, 1],
+      outputRange: [16, 12],
+    }),
+    color: animatedIsFocused.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['#aaa', '#FF6699'],
+    }),
+    backgroundColor: animatedIsFocused.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['transparent', 'white'],
+    }),
+    paddingHorizontal: animatedIsFocused.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 5],
+    }),
+    zIndex: 1,
+  };
+
+  return (
+    <View style={styles.inputContainer}>
+      <Animated.Text style={labelStyle}>
+        {label}
+      </Animated.Text>
+      <TextInput
+        style={[styles.input, {paddingTop: 12}]}
+        value={value}
+        onChangeText={onChangeText}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        secureTextEntry={secureTextEntry}
+        keyboardType={keyboardType}
+        blurOnSubmit
+      />
+    </View>
+  );
+};
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -69,29 +128,28 @@ const RegisterScreen = ({ navigation }) => {
       <View style={styles.box}>
         <Text style={styles.title}>Đăng ký tài khoản</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Họ và tên"
+        <FloatingLabelInput
+          label="Họ và tên"
           value={name}
           onChangeText={setName}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
+        
+        <FloatingLabelInput
+          label="Email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Mật khẩu"
+        
+        <FloatingLabelInput
+          label="Mật khẩu"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Nhập lại mật khẩu"
+        
+        <FloatingLabelInput
+          label="Nhập lại mật khẩu"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
@@ -159,13 +217,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#333",
   },
+  inputContainer: {
+    width: '100%',
+    height: 50,
+    marginBottom: 15,
+    position: 'relative',
+  },
   input: {
     height: 50,
     borderColor: "#ddd",
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 15,
-    marginBottom: 15,
     backgroundColor: "#f9f9f9",
   },
   btn_register: {

@@ -18,7 +18,8 @@ import { getDatabase, ref, set, get } from "firebase/database";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { uploadToCloudinary } from "../../utils/uploadImage"; // Đường dẫn đến hàm uploadToCloudinary
+import { uploadToCloudinary } from "../../utils/uploadImage";
+import { useNavigation } from "@react-navigation/native"; // Thêm dòng này
 
 const PRIMARY_COLOR = "#F08080";
 const SECONDARY_COLOR = "#F08080";
@@ -28,6 +29,7 @@ const UserInfoScreen = () => {
   const auth = getAuth();
   const user = auth.currentUser;
   const db = getDatabase();
+  const navigation = useNavigation(); // Khởi tạo navigation
 
   const [displayName, setDisplayName] = useState("");
   const [photoURL, setPhotoURL] = useState("https://via.placeholder.com/100");
@@ -103,6 +105,11 @@ const UserInfoScreen = () => {
       });
 
       Alert.alert("Thành công", "Cập nhật thông tin thành công!");
+
+      // Delay 1.5s rồi điều hướng
+      setTimeout(() => {
+        navigation.navigate("ProfileScreen");
+      }, 1500);
     } catch (error) {
       Alert.alert("Lỗi", error.message);
     }
@@ -134,7 +141,6 @@ const UserInfoScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Các input */}
             <View style={styles.inputSection}>
               <Text style={styles.label}>Tên hiển thị</Text>
               <TextInput

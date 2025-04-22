@@ -18,6 +18,7 @@ import OrderStatusScreen from "../screens/Order/OrderStatusScreen";
 import OrderTrackingScreen from "../screens/Order/OrderTrackingScreen";
 import OrderDetailScreen from "../screens/Order/OrderDetailScreen";
 import OrderHistoryScreen from "../screens/Profile/OrderHistoryScreen";
+import ProfileScreen from "../screens/BottomTabs/ProfileScreen";
 
 
 const Stack = createStackNavigator();
@@ -45,6 +46,7 @@ const AppNavigator = () => {
           <Stack.Screen name="Cart" component={CartScreen} />
 
           {/* Profile */}
+          <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
           <Stack.Screen name="UserInfo" component={UserInfoScreen} />
           <Stack.Screen
             name="ChangePassword"
