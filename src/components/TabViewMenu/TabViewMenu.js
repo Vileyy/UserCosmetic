@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
     width: "100%",
-    marginBottom: 80,
+    marginBottom: 100,
   },
   logoutButton: {
     backgroundColor: "#F08080",

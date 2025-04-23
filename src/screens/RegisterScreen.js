@@ -11,9 +11,19 @@ import {
 } from "react-native";
 import { registerUser } from "../services/authService";
 import Toast from "react-native-toast-message";
+import { Ionicons } from "@expo/vector-icons"; // Make sure to install expo/vector-icons or your preferred icon library
 
 // Component cho input với nhãn nổi
-const FloatingLabelInput = ({ label, value, onChangeText, secureTextEntry, keyboardType }) => {
+const FloatingLabelInput = ({ 
+  label, 
+  value, 
+  onChangeText, 
+  secureTextEntry, 
+  keyboardType,
+  isPassword = false,
+  showPassword,
+  setShowPassword
+}) => {
   const [isFocused, setIsFocused] = useState(false);
   const animatedIsFocused = new Animated.Value(value ? 1 : 0);
 
@@ -57,15 +67,27 @@ const FloatingLabelInput = ({ label, value, onChangeText, secureTextEntry, keybo
         {label}
       </Animated.Text>
       <TextInput
-        style={[styles.input, {paddingTop: 12}]}
+        style={[styles.input, {paddingTop: 12}, isPassword && {paddingRight: 45}]}
         value={value}
         onChangeText={onChangeText}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        secureTextEntry={secureTextEntry}
+        secureTextEntry={isPassword ? !showPassword : secureTextEntry}
         keyboardType={keyboardType}
         blurOnSubmit
       />
+      {isPassword && (
+        <TouchableOpacity 
+          style={styles.eyeIcon}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <Ionicons 
+            name={showPassword ? "eye-off-outline" : "eye-outline"} 
+            size={24} 
+            color="#666"
+          />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -76,6 +98,8 @@ const RegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -145,14 +169,18 @@ const RegisterScreen = ({ navigation }) => {
           label="Mật khẩu"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          isPassword={true}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
         />
         
         <FloatingLabelInput
           label="Nhập lại mật khẩu"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          secureTextEntry
+          isPassword={true}
+          showPassword={showConfirmPassword}
+          setShowPassword={setShowConfirmPassword}
         />
 
         {/* Nút đăng ký */}
@@ -230,6 +258,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     backgroundColor: "#f9f9f9",
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+    zIndex: 1,
   },
   btn_register: {
     backgroundColor: "#FF6699",

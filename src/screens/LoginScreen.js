@@ -30,6 +30,7 @@ const FloatingLabelInput = ({
   keyboardType,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const animatedIsFocused = new Animated.Value(value ? 1 : 0);
 
   useEffect(() => {
@@ -66,19 +67,40 @@ const FloatingLabelInput = ({
     zIndex: 1,
   };
 
+  // Xác định nếu đây là trường mật khẩu
+  const isPassword = secureTextEntry !== undefined;
+
   return (
     <View style={styles.inputContainer}>
       <Animated.Text style={labelStyle}>{label}</Animated.Text>
-      <TextInput
-        style={[styles.input, { paddingTop: 12 }]}
-        value={value}
-        onChangeText={onChangeText}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType}
-        blurOnSubmit
-      />
+      <View style={styles.inputWrapper}>
+        <TextInput
+          style={[
+            styles.input, 
+            { paddingTop: 12 },
+            isPassword && { paddingRight: 50 } // Thêm padding nếu là trường mật khẩu
+          ]}
+          value={value}
+          onChangeText={onChangeText}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          secureTextEntry={isPassword && !isPasswordVisible}
+          keyboardType={keyboardType}
+          blurOnSubmit
+        />
+        {isPassword && (
+          <TouchableOpacity 
+            style={styles.eyeIcon}
+            onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          >
+            <FontAwesome 
+              name={isPasswordVisible ? "eye" : "eye-slash"} 
+              size={22} 
+              color="#777"
+            />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };
@@ -254,6 +276,11 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     position: "relative",
   },
+  inputWrapper: {
+    position: "relative",
+    width: "100%",
+    height: 50,
+  },
   input: {
     height: 50,
     borderColor: "#ddd",
@@ -261,6 +288,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     backgroundColor: "#f9f9f9",
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 15,
+    top: 13,
+    height: 24,
+    width: 24,
+    justifyContent: "center",
+    alignItems: "center",
   },
   forgotPassword: {
     textAlign: "right",

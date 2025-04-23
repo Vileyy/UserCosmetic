@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   continueShoppingButton: {
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#ff4081",
     borderRadius: 8,
   },
   continueShoppingText: {
@@ -303,12 +303,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#ff4081",
     borderRadius: 8,
     paddingVertical: 14,
   },
   disabledCheckoutButton: {
-    backgroundColor: "#A5D6A7",
+    backgroundColor: "#ff408166",
   },
   checkoutText: {
     fontSize: 16,

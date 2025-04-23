@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { firebase } from '../../../firebaseConfig';
-import { getDatabase, ref, set, push } from "firebase/database";
+import { getDatabase, ref, set, push, remove } from "firebase/database";
 
 const CheckoutScreen = ({ route, navigation }) => {
   const { cartItems } = route.params;
@@ -45,6 +45,18 @@ const CheckoutScreen = ({ route, navigation }) => {
   // Format tiền VND
   const formatCurrency = (amount) => {
     return amount.toLocaleString("vi-VN") + " ₫";
+  };
+
+  // Clear cart after successful order
+  const clearCart = async () => {
+    try {
+      const db = getDatabase();
+      const cartRef = ref(db, `users/${userId}/cart`);
+      await remove(cartRef);
+      console.log("Giỏ hàng đã được xóa thành công");
+    } catch (error) {
+      console.error("Lỗi khi xóa giỏ hàng:", error);
+    }
   };
 
   // Save order to Firebase Realtime Database
@@ -101,6 +113,9 @@ const CheckoutScreen = ({ route, navigation }) => {
         })),
       });
 
+      // Xóa giỏ hàng sau khi đặt hàng thành công
+      await clearCart();
+      
       setIsLoading(false);
       
       // Navigate to success screen with order ID
