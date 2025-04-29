@@ -76,9 +76,9 @@ const FloatingLabelInput = ({
       <View style={styles.inputWrapper}>
         <TextInput
           style={[
-            styles.input, 
+            styles.input,
             { paddingTop: 12 },
-            isPassword && { paddingRight: 50 } // Thêm padding nếu là trường mật khẩu
+            isPassword && { paddingRight: 50 }, // Thêm padding nếu là trường mật khẩu
           ]}
           value={value}
           onChangeText={onChangeText}
@@ -89,13 +89,13 @@ const FloatingLabelInput = ({
           blurOnSubmit
         />
         {isPassword && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.eyeIcon}
             onPress={() => setIsPasswordVisible(!isPasswordVisible)}
           >
-            <FontAwesome 
-              name={isPasswordVisible ? "eye" : "eye-slash"} 
-              size={22} 
+            <FontAwesome
+              name={isPasswordVisible ? "eye" : "eye-slash"}
+              size={22}
               color="#777"
             />
           </TouchableOpacity>

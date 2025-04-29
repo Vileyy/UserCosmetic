@@ -9,76 +9,90 @@ export const CartProvider = ({ children }) => {
   const auth = getAuth();
   const db = getDatabase();
 
-  // Lưu giỏ hàng vào Firebase
-  const saveCartToFirebase = (updatedCart) => {
+  // Load giỏ hàng từ Firebase khi đăng nhập hoặc khi cart thay đổi
+  useEffect(() => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
-    set(ref(db, `users/${userId}/cart`), updatedCart);
-  };
 
-  // Load giỏ hàng từ Firebase khi đăng nhập
-  const loadCartFromFirebase = () => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) return;
     const cartRef = ref(db, `users/${userId}/cart`);
-    onValue(cartRef, (snapshot) => {
+    const unsubscribe = onValue(cartRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         setCart(data);
+      } else {
+        setCart([]); 
       }
     });
-  };
 
-  useEffect(() => {
-    if (auth.currentUser) {
-      loadCartFromFirebase(); // Tải giỏ hàng từ Firebase khi đăng nhập
-    }
+    // Cleanup subscription
+    return () => unsubscribe();
   }, [auth.currentUser]);
-
-  // Lưu giỏ hàng vào Firebase mỗi khi giỏ hàng thay đổi
-  useEffect(() => {
-    if (auth.currentUser) {
-      saveCartToFirebase(cart);
-    }
-  }, [cart, auth.currentUser]);
 
   // Thêm sản phẩm vào giỏ hàng
   const addToCart = (product) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevCart, { ...product, quantity: 1, selected: false }];
-      }
+      const newCart = existingItem
+        ? prevCart.map((item) =>
+            item.id === product.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
+        : [...prevCart, { ...product, quantity: 1, selected: false }];
+
+      // Cập nhật lên Firebase
+      set(ref(db, `users/${userId}/cart`), newCart);
+      return newCart;
     });
   };
 
   // Cập nhật số lượng sản phẩm trong giỏ hàng
   const updateQuantity = (id, newQuantity) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    setCart((prevCart) => {
+      const newCart = prevCart.map((item) =>
         item.id === id ? { ...item, quantity: Math.max(1, newQuantity) } : item
-      )
-    );
+      );
+
+      // Cập nhật lên Firebase
+      set(ref(db, `users/${userId}/cart`), newCart);
+      return newCart;
+    });
   };
 
   // Xóa sản phẩm khỏi giỏ hàng
   const removeFromCart = (id) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    setCart((prevCart) => {
+      const newCart = prevCart.filter((item) => item.id !== id);
+
+      // Cập nhật lên Firebase
+      set(ref(db, `users/${userId}/cart`), newCart);
+      return newCart;
+    });
   };
 
   // Chọn hoặc bỏ chọn sản phẩm trong giỏ hàng
   const toggleSelect = (id) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    setCart((prevCart) => {
+      const newCart = prevCart.map((item) =>
         item.id === id ? { ...item, selected: !item.selected } : item
-      )
-    );
+      );
+
+      // Cập nhật lên Firebase
+      set(ref(db, `users/${userId}/cart`), newCart);
+      return newCart;
+    });
   };
 
   return (

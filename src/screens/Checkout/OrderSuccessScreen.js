@@ -7,7 +7,7 @@ const OrderSuccessScreen = () => {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      navigation.navigate("Home"); // hoặc tên route màn hình trang chủ của anh
+      navigation.navigate("Home"); 
     }, 1500);
 
     return () => clearTimeout(timeout);
@@ -16,7 +16,7 @@ const OrderSuccessScreen = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../../assets/order-success.jpg")} // đường dẫn đúng với thư mục hiện tại
+        source={require("../../assets/order-success.jpg")} 
         style={styles.image}
       />
       <Text style={styles.text}>Đặt hàng thành công!</Text>

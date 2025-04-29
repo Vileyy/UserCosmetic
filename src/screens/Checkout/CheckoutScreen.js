@@ -12,8 +12,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
-import { firebase } from '../../../firebaseConfig';
-import { getDatabase, ref, set, push, remove } from "firebase/database";
+import { firebase } from "../../../firebaseConfig";
+import { getDatabase, ref, set, push, remove, get } from "firebase/database";
 
 const CheckoutScreen = ({ route, navigation }) => {
   const { cartItems } = route.params;
@@ -25,7 +25,7 @@ const CheckoutScreen = ({ route, navigation }) => {
 
   // Get current user ID - assume user is logged in
   const currentUser = firebase.auth().currentUser;
-  const userId = currentUser ? currentUser.uid : 'guest';
+  const userId = currentUser ? currentUser.uid : "guest";
 
   // Tính tổng tiền sản phẩm
   const calculateSubtotal = () => {
@@ -52,10 +52,21 @@ const CheckoutScreen = ({ route, navigation }) => {
     try {
       const db = getDatabase();
       const cartRef = ref(db, `users/${userId}/cart`);
-      await remove(cartRef);
-      console.log("Giỏ hàng đã được xóa thành công");
+
+      // Get current cart items
+      const cartSnapshot = await get(cartRef);
+      const currentCart = cartSnapshot.val() || [];
+
+      // Filter out the items that were just paid for
+      const remainingItems = currentCart.filter(
+        (item) => !cartItems.some((paidItem) => paidItem.id === item.id)
+      );
+
+      // Update cart with remaining items
+      await set(cartRef, remainingItems);
+      console.log("Đã xóa các sản phẩm đã thanh toán khỏi giỏ hàng");
     } catch (error) {
-      console.error("Lỗi khi xóa giỏ hàng:", error);
+      console.error("Lỗi khi cập nhật giỏ hàng:", error);
     }
   };
 
@@ -65,16 +76,16 @@ const CheckoutScreen = ({ route, navigation }) => {
     try {
       // Get database reference
       const db = getDatabase();
-      
+
       // Create a new order ID
-      const orderListRef = ref(db, 'orders');
+      const orderListRef = ref(db, "orders");
       const newOrderRef = push(orderListRef);
       const orderId = newOrderRef.key;
-      
+
       // Generate order details
       const orderData = {
         userId: userId,
-        orderItems: cartItems.map(item => ({
+        orderItems: cartItems.map((item) => ({
           id: item.id,
           name: item.name,
           price: item.price,
@@ -88,23 +99,22 @@ const CheckoutScreen = ({ route, navigation }) => {
         total: calculateTotal(),
         note: note,
         discountCode: discountCode,
-        status: 'pending', // Initial order status
-        createdAt: new Date().toISOString(), // Use ISO string instead of FieldValue
+        status: "pending",
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
       // Save the order data
       await set(newOrderRef, orderData);
-      
+
       // Also save reference to user's orders with items info for direct access
       const userOrderRef = ref(db, `users/${userId}/orders/${orderId}`);
       await set(userOrderRef, {
         orderId: orderId,
         total: calculateTotal(),
-        status: 'pending',
+        status: "pending",
         createdAt: new Date().toISOString(),
-        // Add items information here for direct access
-        items: cartItems.map(item => ({
+        items: cartItems.map((item) => ({
           id: item.id,
           name: item.name,
           price: item.price,
@@ -113,24 +123,21 @@ const CheckoutScreen = ({ route, navigation }) => {
         })),
       });
 
-      // Xóa giỏ hàng sau khi đặt hàng thành công
+      // Xóa các sản phẩm đã thanh toán khỏi giỏ hàng
       await clearCart();
-      
+
       setIsLoading(false);
-      
+
       // Navigate to success screen with order ID
-      navigation.navigate("OrderSuccessScreen", { 
+      navigation.navigate("OrderSuccessScreen", {
         orderId: orderId,
-        total: calculateTotal()
+        total: calculateTotal(),
       });
-      
     } catch (error) {
       setIsLoading(false);
-      Alert.alert(
-        "Lỗi",
-        "Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại sau.",
-        [{ text: "OK" }]
-      );
+      Alert.alert("Lỗi", "Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại sau.", [
+        { text: "OK" },
+      ]);
       console.error("Error saving order: ", error);
     }
   };
@@ -141,14 +148,16 @@ const CheckoutScreen = ({ route, navigation }) => {
       Alert.alert("Lỗi", "Giỏ hàng của bạn đang trống");
       return;
     }
-    
+
     // Confirm order
     Alert.alert(
       "Xác nhận đặt hàng",
-      `Bạn có chắc chắn muốn đặt đơn hàng với tổng tiền ${formatCurrency(calculateTotal())}?`,
+      `Bạn có chắc chắn muốn đặt đơn hàng với tổng tiền ${formatCurrency(
+        calculateTotal()
+      )}?`,
       [
         { text: "Hủy", style: "cancel" },
-        { text: "Đặt hàng", onPress: saveOrderToFirebase }
+        { text: "Đặt hàng", onPress: saveOrderToFirebase },
       ]
     );
   };
@@ -212,7 +221,12 @@ const CheckoutScreen = ({ route, navigation }) => {
           <Text style={styles.sectionTitle}>Mã giảm giá</Text>
           <View style={styles.discountContainer}>
             <View style={styles.inputWithIcon}>
-              <MaterialIcons name="local-offer" size={20} color="#888" style={styles.inputIcon} />
+              <MaterialIcons
+                name="local-offer"
+                size={20}
+                color="#888"
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={styles.discountInput}
                 placeholder="Nhập mã giảm giá"
@@ -239,15 +253,17 @@ const CheckoutScreen = ({ route, navigation }) => {
             <View style={styles.shippingOptionContent}>
               <FontAwesome5 name="shipping-fast" size={18} color="#555" />
               <View style={styles.shippingOptionInfo}>
-                <Text style={styles.shippingOptionTitle}>Giao hàng tiêu chuẩn</Text>
-                <Text style={styles.shippingOptionDesc}>Nhận hàng trong 3-5 ngày</Text>
+                <Text style={styles.shippingOptionTitle}>
+                  Giao hàng tiêu chuẩn
+                </Text>
+                <Text style={styles.shippingOptionDesc}>
+                  Nhận hàng trong 3-5 ngày
+                </Text>
               </View>
             </View>
-            <Text style={styles.shippingFee}>
-              {formatCurrency(30000)}
-            </Text>
+            <Text style={styles.shippingFee}>{formatCurrency(30000)}</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[
               styles.shippingOption,
@@ -259,12 +275,12 @@ const CheckoutScreen = ({ route, navigation }) => {
               <Ionicons name="rocket-outline" size={22} color="#555" />
               <View style={styles.shippingOptionInfo}>
                 <Text style={styles.shippingOptionTitle}>Giao hàng nhanh</Text>
-                <Text style={styles.shippingOptionDesc}>Nhận hàng trong 1-2 ngày</Text>
+                <Text style={styles.shippingOptionDesc}>
+                  Nhận hàng trong 1-2 ngày
+                </Text>
               </View>
             </View>
-            <Text style={styles.shippingFee}>
-              {formatCurrency(60000)}
-            </Text>
+            <Text style={styles.shippingFee}>{formatCurrency(60000)}</Text>
           </TouchableOpacity>
         </View>
 
@@ -273,13 +289,20 @@ const CheckoutScreen = ({ route, navigation }) => {
           <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
           {renderPaymentMethod(
             "cod",
-            <FontAwesome5 name="money-bill-wave" size={20} color="#4CAF50" style={styles.paymentIcon} />,
+            <FontAwesome5
+              name="money-bill-wave"
+              size={20}
+              color="#4CAF50"
+              style={styles.paymentIcon}
+            />,
             "Thanh toán khi nhận hàng (COD)"
           )}
           {renderPaymentMethod(
             "momo",
             <Image
-              source={{ uri: "https://download.logo.wine/logo/MoMo_(company)/MoMo_(company)-Logo.wine.png" }}
+              source={{
+                uri: "https://download.logo.wine/logo/MoMo_(company)/MoMo_(company)-Logo.wine.png",
+              }}
               style={styles.momoIcon}
             />,
             "Ví MoMo"
@@ -287,7 +310,9 @@ const CheckoutScreen = ({ route, navigation }) => {
           {renderPaymentMethod(
             "vnpay",
             <Image
-              source={{ uri: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Icon-VNPAY-QR.png" }}
+              source={{
+                uri: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Icon-VNPAY-QR.png",
+              }}
               style={styles.vnpayIcon}
             />,
             "VNPay"
@@ -313,22 +338,28 @@ const CheckoutScreen = ({ route, navigation }) => {
         {/* Tóm tắt đơn hàng */}
         <View style={styles.summaryContainer}>
           <Text style={styles.summaryTitle}>Tóm tắt đơn hàng</Text>
-          
+
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Tạm tính:</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(calculateSubtotal())}</Text>
+            <Text style={styles.summaryValue}>
+              {formatCurrency(calculateSubtotal())}
+            </Text>
           </View>
-          
+
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Phí vận chuyển:</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(getShippingFee())}</Text>
+            <Text style={styles.summaryValue}>
+              {formatCurrency(getShippingFee())}
+            </Text>
           </View>
-          
+
           <View style={styles.divider} />
-          
+
           <View style={styles.summaryRow}>
             <Text style={styles.totalLabel}>Tổng thanh toán:</Text>
-            <Text style={styles.totalValue}>{formatCurrency(calculateTotal())}</Text>
+            <Text style={styles.totalValue}>
+              {formatCurrency(calculateTotal())}
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -337,7 +368,9 @@ const CheckoutScreen = ({ route, navigation }) => {
       <View style={styles.checkoutButtonContainer}>
         <View style={styles.totalPriceContainer}>
           <Text style={styles.totalPriceLabel}>Tổng cộng:</Text>
-          <Text style={styles.totalPriceValue}>{formatCurrency(calculateTotal())}</Text>
+          <Text style={styles.totalPriceValue}>
+            {formatCurrency(calculateTotal())}
+          </Text>
         </View>
         <TouchableOpacity
           style={styles.checkoutButton}
