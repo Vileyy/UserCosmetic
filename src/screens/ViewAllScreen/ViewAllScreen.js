@@ -2,67 +2,80 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
-  TouchableOpacity,
   Image,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { getDatabase, ref, onValue } from "firebase/database";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 const ViewAllScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { category, title } = route.params;
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Fetch products from API
-    fetchProducts();
-  }, []);
+    const db = getDatabase();
+    const productsRef = ref(db, "products");
 
-  const fetchProducts = async () => {
-    try {
-      // TODO: Implement API call
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setLoading(false);
-    }
-  };
+    const unsubscribe = onValue(productsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const productList = Object.keys(data)
+          .map((key) => ({
+            id: key,
+            ...data[key],
+          }))
+          .filter((item) => item.category === category);
 
-  const renderProductItem = ({ item }) => (
+        setProducts(productList);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [category]);
+
+  const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.productItem}
+      style={styles.productContainer}
       onPress={() =>
-        navigation.navigate("ProductDetail", { productId: item.id })
+        navigation.navigate("ProductDetailScreen", { product: item })
       }
     >
       <Image source={{ uri: item.image }} style={styles.productImage} />
-      <View style={styles.productInfo}>
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>{item.price} VNĐ</Text>
-      </View>
+      <Text style={styles.productName} numberOfLines={2}>
+        {item.name}
+      </Text>
+      <Text style={styles.productPrice}>
+        {parseInt(item.price).toLocaleString("vi-VN")} VNĐ
+      </Text>
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Tất cả sản phẩm</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>{title}</Text>
       </View>
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text>Đang tải...</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={products}
-          renderItem={renderProductItem}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.listContainer}
-        />
-      )}
+
+      <FlatList
+        data={products}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}
+      />
     </SafeAreaView>
   );
 };
@@ -73,45 +86,57 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   header: {
-    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
-  headerTitle: {
+  backButton: {
+    marginRight: 15,
+  },
+  backButtonText: {
+    fontSize: 24,
+  },
+  title: {
     fontSize: 20,
     fontWeight: "bold",
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  contentContainer: {
+    padding: 10,
   },
-  listContainer: {
-    padding: 8,
+  row: {
+    justifyContent: "space-between",
   },
-  productItem: {
-    flex: 1,
-    margin: 8,
+  productContainer: {
+    width: "48%",
+    backgroundColor: "#fff",
+    padding: 10,
     borderRadius: 8,
-    backgroundColor: "#f8f8f8",
-    overflow: "hidden",
+    marginBottom: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
   },
   productImage: {
     width: "100%",
-    height: 200,
+    height: 150,
+    borderRadius: 8,
     resizeMode: "cover",
   },
-  productInfo: {
-    padding: 8,
-  },
   productName: {
-    fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: "bold",
+    marginTop: 5,
+    textAlign: "center",
   },
   productPrice: {
     fontSize: 14,
-    color: "#666",
+    color: "#e74c3c",
+    fontWeight: "bold",
+    marginTop: 5,
   },
 });
 

@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { getDatabase, ref, onValue } from "firebase/database";
-import { useNavigation } from "@react-navigation/native"; 
+import { useNavigation } from "@react-navigation/native";
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
 
   useEffect(() => {
     const db = getDatabase();
@@ -55,7 +55,14 @@ const Categories = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.titleHeader}>📌 Danh Mục</Text>
-        <TouchableOpacity onPress={() => console.log("Xem tất cả")}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("ViewAllScreen", {
+              category: "categories",
+              title: "Tất cả danh mục",
+            })
+          }
+        >
           <Text style={styles.viewAll}>Xem tất cả</Text>
         </TouchableOpacity>
       </View>

@@ -26,7 +26,7 @@ export default function NewProducts() {
             id: key,
             ...data[key],
           }))
-          .filter((item) => item.category === "new_product"); 
+          .filter((item) => item.category === "new_product");
 
         setProducts(productList);
       } else {
@@ -56,7 +56,19 @@ export default function NewProducts() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🆕 Sản phẩm mới</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>🆕 Sản phẩm mới</Text>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("ViewAllScreen", {
+              category: "new_product",
+              title: "Sản phẩm mới",
+            })
+          }
+        >
+          <Text style={styles.viewAll}>Xem tất cả</Text>
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={products}
         renderItem={renderItem}
@@ -78,10 +90,19 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 30,
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
+  },
+  viewAll: {
+    fontSize: 16,
+    color: "black",
   },
   row: {
     justifyContent: "space-between",

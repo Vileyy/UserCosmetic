@@ -12,8 +12,8 @@ import { useNavigation } from "@react-navigation/native";
 
 const FlashDeals = () => {
   const [flashDeals, setFlashDeals] = useState([]);
-  const [countdown, setCountdown] = useState(3600); 
-  const navigation = useNavigation(); 
+  const [countdown, setCountdown] = useState(3600);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const db = getDatabase();
@@ -82,7 +82,14 @@ const FlashDeals = () => {
           <Text style={styles.title}>🔥 Flash Deals</Text>
           <Text style={styles.timer}>⏳ {formatTime(countdown)}</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("ViewAllScreen", {
+              category: "FlashDeals",
+              title: "Flash Deals",
+            })
+          }
+        >
           <Text style={styles.viewAll}>Xem tất cả</Text>
         </TouchableOpacity>
       </View>
@@ -119,12 +126,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#333",
-    marginRight: 8, 
+    marginRight: 8,
   },
   timer: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "red", 
+    color: "red",
   },
   viewAll: {
     fontSize: 16,
