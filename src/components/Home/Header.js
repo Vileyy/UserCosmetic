@@ -15,7 +15,6 @@ const Header = ({ search, setSearch, handleSearchSubmit }) => {
 
   return (
     <View style={styles.header}>
-      {/* Icon menu */}
       <TouchableOpacity
         style={styles.iconButton}
         onPress={() => setIsMenuVisible(true)}

@@ -20,8 +20,8 @@ import NewProducts from "../../components/Home/NewProducts";
 
 const HomeScreen = () => {
   const [search, setSearch] = useState("");
-  const [products, setProducts] = useState([]); 
-  const [suggestions, setSuggestions] = useState([]); 
+  const [products, setProducts] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -86,7 +86,7 @@ const HomeScreen = () => {
       {/* Thanh Header */}
       <Header
         search={search}
-        setSearch={handleSearchChange} 
+        setSearch={handleSearchChange}
         handleSearchSubmit={handleSearchSubmit}
       />
 
@@ -99,14 +99,16 @@ const HomeScreen = () => {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.suggestionItem}
-                onPress={() => handleProductSelect(item)} 
+                onPress={() => handleProductSelect(item)}
               >
                 <Image
                   source={{ uri: item.image }}
                   style={styles.suggestionImage}
                 />
-                <View>
-                  <Text style={styles.suggestionText}>{item.name}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.suggestionText} numberOfLines={1}>
+                    {item.name}
+                  </Text>
                   <Text style={styles.suggestionPrice}>
                     {formatCurrency(item.price)}
                   </Text>
@@ -153,9 +155,9 @@ const styles = StyleSheet.create({
   suggestionsContainer: {
     backgroundColor: "white",
     position: "absolute",
-    top: 100, 
-    left: 20,
-    right: 20,
+    top: 80,
+    left: 15,
+    right: 15,
     zIndex: 1,
     borderRadius: 10,
     shadowColor: "#000",
@@ -163,27 +165,32 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
-    marginTop: 40,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#eee",
   },
   suggestionItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    borderBottomColor: "#eee",
   },
   suggestionImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 5,
+    width: 45,
+    height: 45,
+    borderRadius: 6,
     marginRight: 10,
+    backgroundColor: "#f5f5f5",
   },
   suggestionText: {
-    fontSize: 16,
+    fontSize: 15,
+    color: "#333",
+    flex: 1,
   },
   suggestionPrice: {
     fontSize: 14,
-    color: "#FF5733", 
+    color: "#FF5733",
     fontWeight: "bold",
     marginTop: 3,
   },
