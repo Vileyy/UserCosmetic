@@ -16,7 +16,7 @@ export default function NewProducts() {
 
   useEffect(() => {
     const db = getDatabase();
-    const productsRef = ref(db, "products"); // ✅ Đọc đúng bảng products
+    const productsRef = ref(db, "products");
 
     const unsubscribe = onValue(productsRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -51,6 +51,9 @@ export default function NewProducts() {
       <Text style={styles.productPrice}>
         {parseInt(item.price).toLocaleString("vi-VN")} VNĐ
       </Text>
+      <Text style={styles.productDescription} numberOfLines={2}>
+        {item.description}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -76,9 +79,9 @@ export default function NewProducts() {
         numColumns={2}
         columnWrapperStyle={styles.row}
         showsVerticalScrollIndicator={false}
-        nestedScrollEnabled={true} // ✅ Fix lỗi ScrollView
-        scrollEnabled={false} // 🔥 Ngăn FlatList tự scroll trong ScrollView
-        contentContainerStyle={{ paddingBottom: 65 }} // ✅ Tạo khoảng cách với Bottom Tab
+        nestedScrollEnabled={true}
+        scrollEnabled={false}
+        contentContainerStyle={{ paddingBottom: 65 }}
       />
     </View>
   );
@@ -86,19 +89,24 @@ export default function NewProducts() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 10,
-    marginTop: 10,
+    paddingHorizontal: 15,
+    marginTop: 15,
     marginBottom: 30,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
+
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+
+    color: "black",
   },
   viewAll: {
     fontSize: 16,
@@ -106,35 +114,56 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: "space-between",
+    paddingHorizontal: 5,
   },
   productContainer: {
     width: "48%",
     backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-    alignItems: "center",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    alignItems: "flex-start",
     shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 2,
+    shadowRadius: 3.84,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    height: 300,
   },
   productImage: {
     width: "100%",
     height: 150,
-    borderRadius: 8,
+    borderRadius: 10,
     resizeMode: "cover",
+    backgroundColor: "#f8f8f8",
   },
   productName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "bold",
-    marginTop: 5,
-    textAlign: "center",
+    marginTop: 8,
+    textAlign: "left",
+    color: "#333",
+    height: 40,
   },
   productPrice: {
-    fontSize: 14,
-    color: "#e74c3c",
+    fontSize: 16,
+    color: "#FF6B6B",
     fontWeight: "bold",
-    marginTop: 5,
+    marginTop: 8,
+    textAlign: "left",
+    height: 24,
+  },
+  productDescription: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 8,
+    textAlign: "left",
+    lineHeight: 16,
+    height: 32,
   },
 });

@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: 170,
-    height: 240,
+    height: 260,
     backgroundColor: "#fff",
     borderRadius: 8,
     padding: 10,
@@ -164,25 +164,31 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     width: "100%",
-    marginTop: 5,
+    marginTop: 8,
+    height: 110,
   },
   name: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
     color: "#333",
     textAlign: "left",
+    marginBottom: 4,
+    height: 40,
   },
   price: {
     fontSize: 16,
     color: "red",
     fontWeight: "bold",
-    marginVertical: 3,
+    marginVertical: 4,
     textAlign: "left",
+    height: 24,
   },
   description: {
-    fontSize: 16,
+    fontSize: 13,
     color: "#666",
     textAlign: "left",
+    lineHeight: 16,
+    height: 32,
   },
 });
 

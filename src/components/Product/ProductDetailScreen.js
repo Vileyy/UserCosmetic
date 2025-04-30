@@ -176,7 +176,9 @@ const ProductDetailScreen = ({ route, navigation }) => {
                 style={styles.deliveryIcon}
               />
               <Text style={styles.deliveryTitle}>Địa điểm chi nhánh:</Text>
-              <Text style={styles.deliveryValue}>82 Hồ Tùng Mậu, P.Bến Nghé, Q.1, TP.HCM</Text>
+              <Text style={styles.deliveryValue}>
+                82 Hồ Tùng Mậu, P.Bến Nghé, Q.1, TP.HCM
+              </Text>
               <Ionicons name="chevron-forward" size={16} color="#F08080" />
             </View>
 
@@ -269,10 +271,10 @@ const ProductDetailScreen = ({ route, navigation }) => {
             <Text style={styles.buttonText}>Thêm vào giỏ</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.buyNowButton}>
+          {/* <TouchableOpacity style={styles.buyNowButton}>
             <Ionicons name="flash-outline" size={22} color="#fff" />
             <Text style={styles.buttonText}>Mua ngay</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
     </SafeAreaView>
@@ -555,7 +557,7 @@ const styles = StyleSheet.create({
   addToCartButton: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: "#FF9800",
+    backgroundColor: "#FF6B6B",
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",

@@ -13,7 +13,7 @@ import ExploreScreen from "../screens/BottomTabs/ExploreScreen";
 import UserInfoScreen from "../screens/Profile/UserInfoScreen";
 import ChangePasswordScreen from "../screens/Profile/ChangePasswordScreen";
 import CheckoutScreen from "../screens/Checkout/CheckoutScreen";
-import OrderSuccessScreen from "../screens/Checkout/OrderSuccessScreen";
+import OrderSuccessScreen from "../screens/Order/OrderSuccessScreen";
 import OrderStatusScreen from "../screens/Order/OrderStatusScreen";
 import OrderTrackingScreen from "../screens/Order/OrderTrackingScreen";
 import OrderDetailScreen from "../screens/Order/OrderDetailScreen";

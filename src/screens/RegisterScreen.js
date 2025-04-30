@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { registerUser } from "../services/authService";
 import Toast from "react-native-toast-message";
-import { Ionicons } from "@expo/vector-icons"; // Make sure to install expo/vector-icons or your preferred icon library
+import { Ionicons } from "@expo/vector-icons"; 
 
 // Component cho input với nhãn nổi
 const FloatingLabelInput = ({
@@ -174,6 +174,8 @@ const RegisterScreen = ({ navigation }) => {
           isPassword={true}
           showPassword={showPassword}
           setShowPassword={setShowPassword}
+          autoCapitalize="none"
+          autoComplete="off"
         />
 
         <FloatingLabelInput
@@ -183,6 +185,8 @@ const RegisterScreen = ({ navigation }) => {
           isPassword={true}
           showPassword={showConfirmPassword}
           setShowPassword={setShowConfirmPassword}
+          autoCapitalize="none"
+          autoComplete="off"
         />
 
         {/* Nút đăng ký */}

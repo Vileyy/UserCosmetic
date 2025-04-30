@@ -58,7 +58,6 @@ const UserInfoScreen = () => {
             setDisplayName(data.displayName);
           }
         } else {
-          // Nếu user mới, lưu ảnh mặc định vào database
           set(userRef, {
             displayName: user.displayName || "",
             photoURL: DEFAULT_AVATAR,
