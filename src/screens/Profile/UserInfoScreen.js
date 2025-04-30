@@ -19,7 +19,9 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { uploadToCloudinary } from "../../utils/uploadImage";
-import { useNavigation } from "@react-navigation/native"; // Thêm dòng này
+import { useNavigation } from "@react-navigation/native";
+
+const DEFAULT_AVATAR = require("../../assets/avatar_default.jpg");
 
 const PRIMARY_COLOR = "#F08080";
 const SECONDARY_COLOR = "#F08080";
@@ -29,10 +31,10 @@ const UserInfoScreen = () => {
   const auth = getAuth();
   const user = auth.currentUser;
   const db = getDatabase();
-  const navigation = useNavigation(); // Khởi tạo navigation
+  const navigation = useNavigation();
 
   const [displayName, setDisplayName] = useState("");
-  const [photoURL, setPhotoURL] = useState("https://via.placeholder.com/100");
+  const [photoURL, setPhotoURL] = useState(DEFAULT_AVATAR);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -41,7 +43,6 @@ const UserInfoScreen = () => {
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName || "");
-      setPhotoURL(user.photoURL || "https://via.placeholder.com/100");
       setEmail(user.email || "");
 
       const userRef = ref(db, `users/${user.uid}`);
@@ -51,13 +52,22 @@ const UserInfoScreen = () => {
           setPhone(data.phone || "");
           setAddress(data.address || "");
           setGender(data.gender || "Nam");
+          setPhotoURL(data.photoURL || DEFAULT_AVATAR);
 
           if (!user.displayName && data.displayName) {
             setDisplayName(data.displayName);
           }
-          if (!user.photoURL && data.photoURL) {
-            setPhotoURL(data.photoURL);
-          }
+        } else {
+          // Nếu user mới, lưu ảnh mặc định vào database
+          set(userRef, {
+            displayName: user.displayName || "",
+            photoURL: DEFAULT_AVATAR,
+            email: user.email || "",
+            phone: "",
+            address: "",
+            gender: "Nam",
+          });
+          setPhotoURL(DEFAULT_AVATAR);
         }
       });
     }
@@ -105,8 +115,6 @@ const UserInfoScreen = () => {
       });
 
       Alert.alert("Thành công", "Cập nhật thông tin thành công!");
-
-      // Delay 1.5s rồi điều hướng
       setTimeout(() => {
         navigation.navigate("ProfileScreen");
       }, 1500);
@@ -125,12 +133,20 @@ const UserInfoScreen = () => {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Thông tin cá nhân</Text>
-            <Text style={styles.headerSubtitle}>Cập nhật thông tin của bạn</Text>
+            <Text style={styles.headerSubtitle}>
+              Cập nhật thông tin của bạn
+            </Text>
           </View>
 
           <View style={styles.profileSection}>
             <View style={styles.avatarContainer}>
-              <Image source={{ uri: photoURL }} style={styles.avatar} />
+              <Image
+                source={
+                  typeof photoURL === "string" ? { uri: photoURL } : photoURL
+                }
+                style={styles.avatar}
+                defaultSource={DEFAULT_AVATAR}
+              />
               <TouchableOpacity style={styles.cameraButton} onPress={pickImage}>
                 <LinearGradient
                   colors={[PRIMARY_COLOR, SECONDARY_COLOR]}
@@ -209,7 +225,10 @@ const UserInfoScreen = () => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.saveButton} onPress={handleUpdateProfile}>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleUpdateProfile}
+          >
             <LinearGradient
               colors={[PRIMARY_COLOR, SECONDARY_COLOR]}
               style={styles.buttonGradient}

@@ -63,11 +63,18 @@ const ProfileScreen = () => {
   return (
     <ScrollView style={styles.container}>
       {/* Profile Card */}
-      <View style={styles.profileCard}>
+      <TouchableOpacity
+        style={styles.profileCard}
+        onPress={() => navigation.navigate("UserInfo")}
+        activeOpacity={0.7}
+      >
         <Image
-          source={{
-            uri: userInfo?.photoURL || "https://via.placeholder.com/100",
-          }}
+          source={
+            userInfo?.photoURL &&
+            userInfo.photoURL !== "https://via.placeholder.com/100"
+              ? { uri: userInfo.photoURL }
+              : require("../../assets/avatar_default.jpg")
+          }
           style={styles.avatar}
         />
         <View>
@@ -78,7 +85,7 @@ const ProfileScreen = () => {
             {auth.currentUser?.email || "Không rõ email"}
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* Các mục trong Profile */}
       <View style={styles.section}>

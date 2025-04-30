@@ -4,14 +4,13 @@ import { getDatabase, ref, set } from "firebase/database";
 export const placeOrder = (orderDetails, userId) => {
   return new Promise((resolve, reject) => {
     try {
-      const db = getDatabase(); // Lấy database
-      const orderId = orderDetails.orderId; // Lấy orderId từ orderDetails
+      const db = getDatabase(); 
+      const orderId = orderDetails.orderId; 
 
       if (!orderId) {
         throw new Error("Order ID is missing");
       }
 
-      // Tạo tham chiếu đến vị trí đơn hàng trong database
       const orderRef = ref(db, `orders/${orderId}`);
 
       // Cấu trúc dữ liệu đơn hàng
