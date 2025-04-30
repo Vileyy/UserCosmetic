@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   Animated,
+  Alert,
 } from "react-native";
 import {
   getAuth,
@@ -14,6 +15,7 @@ import {
   GoogleAuthProvider,
   signInWithCredential,
 } from "firebase/auth";
+import { getDatabase, ref, get } from "firebase/database";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import Toast from "react-native-toast-message";
@@ -78,7 +80,7 @@ const FloatingLabelInput = ({
           style={[
             styles.input,
             { paddingTop: 12 },
-            isPassword && { paddingRight: 50 }, // Thêm padding nếu là trường mật khẩu
+            isPassword && { paddingRight: 50 },
           ]}
           value={value}
           onChangeText={onChangeText}
@@ -86,6 +88,8 @@ const FloatingLabelInput = ({
           onBlur={() => setIsFocused(false)}
           secureTextEntry={isPassword && !isPasswordVisible}
           keyboardType={keyboardType}
+          autoCapitalize="none"
+          autoComplete="off"
           blurOnSubmit
         />
         {isPassword && (
@@ -109,6 +113,7 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const auth = getAuth();
+  const db = getDatabase();
 
   // Xử lý đăng nhập bằng Email & Password
   const handleLogin = async () => {
@@ -121,7 +126,27 @@ const LoginScreen = ({ navigation }) => {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      // Check if user is banned
+      const userRef = ref(db, `users/${user.uid}`);
+      const snapshot = await get(userRef);
+
+      if (snapshot.exists() && snapshot.val().status === "banned") {
+        Alert.alert(
+          "Tài khoản bị cấm",
+          "Tài khoản của bạn đã bị cấm. Vui lòng liên hệ qua số điện thoại 0364905231 để được hỗ trợ.",
+          [{ text: "OK" }]
+        );
+        await auth.signOut();
+        return;
+      }
+
       Toast.show({ type: "success", text1: "🎉 Đăng nhập thành công!" });
       setTimeout(() => navigation.replace("Home"), 1200);
     } catch (error) {

@@ -67,8 +67,6 @@ const OrderDetailScreen = ({ route }) => {
     outputRange: [0, 1],
   });
 
-  // ⚠️ Đây là phiên bản chính thức đã sửa để ưu tiên đọc dữ liệu đúng từ Firebase (users/{userId}/orders/{orderId})
-
   useEffect(() => {
     const fetchOrderDetail = async () => {
       try {
@@ -81,12 +79,10 @@ const OrderDetailScreen = ({ route }) => {
 
         const userId = auth.currentUser.uid;
         const database = getDatabase();
-
-        // ✅ Ưu tiên đọc đúng node người dùng
         const paths = [
-          `users/${userId}/orders/${orderId}`, // <-- Ưu tiên 1
-          `orders/${userId}/${orderId}`, // <-- Ưu tiên 2 nếu có
-          `orders/${orderId}`, // <-- Ưu tiên 3
+          `users/${userId}/orders/${orderId}`,
+          `orders/${userId}/${orderId}`,
+          `orders/${orderId}`,
         ];
 
         let foundData = false;
@@ -100,11 +96,8 @@ const OrderDetailScreen = ({ route }) => {
           if (data) {
             console.log(`Found data at path: ${path}`);
             console.log("Order data:", data);
-
-            // ✅ Auto bổ sung các mốc thời gian nếu cần
             const updates = {};
             const now = new Date().toISOString();
-
             if (data.status === "processing" && !data.confirmedDate) {
               updates.confirmedDate = now;
               data.confirmedDate = now;
@@ -149,7 +142,7 @@ const OrderDetailScreen = ({ route }) => {
   }, [orderId]);
 
   const getStatusColor = (status) => {
-    if (!status) return "#95a5a6"; // Default gray color
+    if (!status) return "#95a5a6"; //gray color
 
     switch (status) {
       case "pending":
@@ -209,9 +202,7 @@ const OrderDetailScreen = ({ route }) => {
   const calculateTotal = () => {
     if (!order) return 0;
 
-    // DÙNG FIELD "total" đúng với Firebase
     if (order.total) return order.total;
-
     const items = order.products || order.items;
     if (!items || items.length === 0) return 0;
 
@@ -224,7 +215,6 @@ const OrderDetailScreen = ({ route }) => {
 
     return subtotal + shippingFee - discount;
   };
-
   const handleCancelOrder = async () => {
     try {
       setProcessingCancel(true);
@@ -236,7 +226,6 @@ const OrderDetailScreen = ({ route }) => {
 
       const database = getDatabase();
 
-      // First, update order status to cancelled
       const orderRef = ref(database, order.path);
       await update(orderRef, {
         status: "cancelled",
@@ -252,7 +241,6 @@ const OrderDetailScreen = ({ route }) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error("Error cancelling order:", error);
-      // Vibrate for error feedback
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setProcessingCancel(false);

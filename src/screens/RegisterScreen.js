@@ -14,29 +14,29 @@ import Toast from "react-native-toast-message";
 import { Ionicons } from "@expo/vector-icons"; // Make sure to install expo/vector-icons or your preferred icon library
 
 // Component cho input với nhãn nổi
-const FloatingLabelInput = ({ 
-  label, 
-  value, 
-  onChangeText, 
-  secureTextEntry, 
+const FloatingLabelInput = ({
+  label,
+  value,
+  onChangeText,
+  secureTextEntry,
   keyboardType,
   isPassword = false,
   showPassword,
-  setShowPassword
+  setShowPassword,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const animatedIsFocused = new Animated.Value(value ? 1 : 0);
 
   useEffect(() => {
     Animated.timing(animatedIsFocused, {
-      toValue: (isFocused || value) ? 1 : 0,
+      toValue: isFocused || value ? 1 : 0,
       duration: 200,
       useNativeDriver: false,
     }).start();
   }, [isFocused, value, animatedIsFocused]);
 
   const labelStyle = {
-    position: 'absolute',
+    position: "absolute",
     left: 15,
     top: animatedIsFocused.interpolate({
       inputRange: [0, 1],
@@ -48,11 +48,11 @@ const FloatingLabelInput = ({
     }),
     color: animatedIsFocused.interpolate({
       inputRange: [0, 1],
-      outputRange: ['#aaa', '#FF6699'],
+      outputRange: ["#aaa", "#FF6699"],
     }),
     backgroundColor: animatedIsFocused.interpolate({
       inputRange: [0, 1],
-      outputRange: ['transparent', 'white'],
+      outputRange: ["transparent", "white"],
     }),
     paddingHorizontal: animatedIsFocused.interpolate({
       inputRange: [0, 1],
@@ -63,11 +63,13 @@ const FloatingLabelInput = ({
 
   return (
     <View style={styles.inputContainer}>
-      <Animated.Text style={labelStyle}>
-        {label}
-      </Animated.Text>
+      <Animated.Text style={labelStyle}>{label}</Animated.Text>
       <TextInput
-        style={[styles.input, {paddingTop: 12}, isPassword && {paddingRight: 45}]}
+        style={[
+          styles.input,
+          { paddingTop: 12 },
+          isPassword && { paddingRight: 45 },
+        ]}
         value={value}
         onChangeText={onChangeText}
         onFocus={() => setIsFocused(true)}
@@ -77,13 +79,13 @@ const FloatingLabelInput = ({
         blurOnSubmit
       />
       {isPassword && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.eyeIcon}
           onPress={() => setShowPassword(!showPassword)}
         >
-          <Ionicons 
-            name={showPassword ? "eye-off-outline" : "eye-outline"} 
-            size={24} 
+          <Ionicons
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={24}
             color="#666"
           />
         </TouchableOpacity>
@@ -129,7 +131,7 @@ const RegisterScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      await registerUser(email, password);
+      await registerUser(email, password, name);
       Toast.show({
         type: "success",
         text1: "Thành công",
@@ -157,14 +159,14 @@ const RegisterScreen = ({ navigation }) => {
           value={name}
           onChangeText={setName}
         />
-        
+
         <FloatingLabelInput
           label="Email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
         />
-        
+
         <FloatingLabelInput
           label="Mật khẩu"
           value={password}
@@ -173,7 +175,7 @@ const RegisterScreen = ({ navigation }) => {
           showPassword={showPassword}
           setShowPassword={setShowPassword}
         />
-        
+
         <FloatingLabelInput
           label="Nhập lại mật khẩu"
           value={confirmPassword}
@@ -246,10 +248,10 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   inputContainer: {
-    width: '100%',
+    width: "100%",
     height: 50,
     marginBottom: 15,
-    position: 'relative',
+    position: "relative",
   },
   input: {
     height: 50,
@@ -260,7 +262,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
   },
   eyeIcon: {
-    position: 'absolute',
+    position: "absolute",
     right: 12,
     top: 12,
     zIndex: 1,
