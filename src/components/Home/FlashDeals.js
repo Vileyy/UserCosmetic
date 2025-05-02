@@ -9,10 +9,14 @@ import {
 } from "react-native";
 import { getDatabase, ref, onValue } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const TIMER_DURATION = 2 * 60 * 60; // 2 giờ = 7200 giây
+const TIMER_STORAGE_KEY = "flash_deals_end_time";
 
 const FlashDeals = () => {
   const [flashDeals, setFlashDeals] = useState([]);
-  const [countdown, setCountdown] = useState(3600);
+  const [countdown, setCountdown] = useState(TIMER_DURATION);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -34,6 +38,66 @@ const FlashDeals = () => {
     });
   }, []);
 
+  // Khởi tạo và theo dõi thời gian đếm ngược
+  useEffect(() => {
+    const initializeCountdown = async () => {
+      try {
+        const endTimeString = await AsyncStorage.getItem(TIMER_STORAGE_KEY);
+
+        let endTime;
+        const currentTime = new Date().getTime();
+
+        if (endTimeString) {
+          endTime = parseInt(endTimeString);
+          if (endTime <= currentTime) {
+            endTime = currentTime + TIMER_DURATION * 1000;
+            await AsyncStorage.setItem(TIMER_STORAGE_KEY, endTime.toString());
+          }
+        } else {
+          endTime = currentTime + TIMER_DURATION * 1000;
+          await AsyncStorage.setItem(TIMER_STORAGE_KEY, endTime.toString());
+        }
+        const remainingSeconds = Math.max(
+          0,
+          Math.floor((endTime - currentTime) / 1000)
+        );
+        setCountdown(remainingSeconds);
+      } catch (error) {
+        console.error("Error initializing countdown:", error);
+        setCountdown(TIMER_DURATION); 
+      }
+    };
+
+    initializeCountdown();
+  }, []);
+
+  // Chạy đồng hồ đếm ngược
+  useEffect(() => {
+    if (countdown <= 0) {
+      // Khi thời gian kết thúc, tạo thời gian mới
+      const resetCountdown = async () => {
+        const newEndTime = new Date().getTime() + TIMER_DURATION * 1000;
+        await AsyncStorage.setItem(TIMER_STORAGE_KEY, newEndTime.toString());
+        setCountdown(TIMER_DURATION);
+      };
+
+      resetCountdown();
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        // Khi countdown = 1, lần update tiếp theo sẽ là 0
+        if (prev <= 1) {
+          clearInterval(timer);
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [countdown]);
+
   // Hàm định dạng thời gian hh:mm:ss
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
@@ -43,16 +107,6 @@ const FlashDeals = () => {
       .toString()
       .padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
-
-  // Đếm ngược
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [countdown]);
 
   //Xử lý khi bấm vào sản phẩm
   const handlePress = (product) => {

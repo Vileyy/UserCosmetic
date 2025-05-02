@@ -12,6 +12,7 @@ import { CartProvider } from "../context/CartContext";
 import ExploreScreen from "../screens/BottomTabs/ExploreScreen";
 import UserInfoScreen from "../screens/Profile/UserInfoScreen";
 import ChangePasswordScreen from "../screens/Profile/ChangePasswordScreen";
+import FavoriteProductsScreen from "../screens/Profile/FavoriteProductsScreen";
 import CheckoutScreen from "../screens/Checkout/CheckoutScreen";
 import OrderSuccessScreen from "../screens/Order/OrderSuccessScreen";
 import OrderStatusScreen from "../screens/Order/OrderStatusScreen";
@@ -56,6 +57,10 @@ const AppNavigator = () => {
             component={ChangePasswordScreen}
           />
           <Stack.Screen name="Checkout" component={CheckoutScreen} />
+          <Stack.Screen
+            name="FavoriteProductsScreen"
+            component={FavoriteProductsScreen}
+          />
 
           {/* Order */}
           <Stack.Screen

@@ -8,6 +8,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   Image,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getDatabase, ref, onValue, off } from "firebase/database";
@@ -74,9 +76,13 @@ const ExploreScreen = ({ navigation }) => {
       if (type === "name") {
         sorted.sort((a, b) => a?.name?.localeCompare(b?.name));
       } else if (type === "price_asc") {
-        sorted.sort((a, b) => (parseFloat(a?.price) || 0) - (parseFloat(b?.price) || 0));
+        sorted.sort(
+          (a, b) => (parseFloat(a?.price) || 0) - (parseFloat(b?.price) || 0)
+        );
       } else if (type === "price_desc") {
-        sorted.sort((a, b) => (parseFloat(b?.price) || 0) - (parseFloat(a?.price) || 0));
+        sorted.sort(
+          (a, b) => (parseFloat(b?.price) || 0) - (parseFloat(a?.price) || 0)
+        );
       }
 
       setSortType(type);
@@ -87,53 +93,85 @@ const ExploreScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Thanh tìm kiếm */}
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={24} color="gray" />
-        <TextInput
-          style={styles.input}
-          placeholder="Tìm kiếm sản phẩm..."
-          value={searchText}
-          onChangeText={handleSearch}
-        />
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <View style={styles.header}>
+        {/* Thanh tìm kiếm */}
+        <View style={styles.searchBar}>
+          <Ionicons name="search-outline" size={20} color="#666" />
+          <TextInput
+            style={styles.input}
+            placeholder="Tìm kiếm sản phẩm..."
+            placeholderTextColor="#999"
+            value={searchText}
+            onChangeText={handleSearch}
+          />
+        </View>
       </View>
 
       {/* Bộ lọc */}
       <View style={styles.filterContainer}>
-        {[
-          { label: "Tên", type: "name" },
-          { label: "Giá ↑", type: "price_asc" },
-          { label: "Giá ↓", type: "price_desc" },
-        ].map((filter) => (
-          <TouchableOpacity
-            key={filter.type}
-            style={[
-              styles.filterButton,
-              sortType === filter.type && styles.activeFilter,
-            ]}
-            onPress={() => sortProducts(filter.type)}
-          >
-            <Text
+        <Text style={styles.filterLabel}>Sắp xếp theo:</Text>
+        <View style={styles.filtersWrapper}>
+          {[
+            { label: "Tên A-Z", type: "name", icon: "text-outline" },
+            {
+              label: "Giá thấp → cao",
+              type: "price_asc",
+              icon: "trending-up-outline",
+            },
+            {
+              label: "Giá cao → thấp",
+              type: "price_desc",
+              icon: "trending-down-outline",
+            },
+          ].map((filter) => (
+            <TouchableOpacity
+              key={filter.type}
               style={[
-                styles.filterText,
-                sortType === filter.type && styles.activeFilterText,
+                styles.filterButton,
+                sortType === filter.type && styles.activeFilter,
               ]}
+              onPress={() => sortProducts(filter.type)}
             >
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Ionicons
+                name={filter.icon}
+                size={16}
+                color={sortType === filter.type ? "#fff" : "#555"}
+                style={styles.filterIcon}
+              />
+              <Text
+                style={[
+                  styles.filterText,
+                  sortType === filter.type && styles.activeFilterText,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Hiển thị số lượng kết quả */}
+      <View style={styles.resultsCountContainer}>
+        <Text style={styles.resultsCount}>
+          {filteredProducts.length} sản phẩm
+        </Text>
       </View>
 
       {/* Hiển thị loading */}
       {loading ? (
-        <ActivityIndicator size="large" color="#ff6f61" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#ff6f61" />
+        </View>
       ) : (
         <FlatList
           data={filteredProducts}
           keyExtractor={(item) => item.id}
           numColumns={2}
           columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.productsList}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
             if (!item?.image || !item?.name) return null;
 
@@ -143,15 +181,31 @@ const ExploreScreen = ({ navigation }) => {
                 onPress={() => {
                   navigation.navigate("ProductDetailScreen", { product: item });
                 }}
+                activeOpacity={0.9}
               >
-                <Image source={{ uri: item.image }} style={styles.productImage} />
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={{ uri: item.image }}
+                    style={styles.productImage}
+                  />
+                </View>
                 <View style={styles.productInfo}>
-                  <Text style={styles.productName}>{item.name}</Text>
+                  <Text
+                    style={styles.productName}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.name}
+                  </Text>
                   <Text style={styles.productPrice}>
                     {parseInt(item.price || 0).toLocaleString()}đ
                   </Text>
                   {item.description && (
-                    <Text numberOfLines={2} ellipsizeMode="tail" style={styles.productDescription}>
+                    <Text
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                      style={styles.productDescription}
+                    >
                       {item.description}
                     </Text>
                   )}
@@ -168,90 +222,157 @@ const ExploreScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    paddingTop: 40,
-    marginBottom: 65,
+    backgroundColor: "#f8f8f8",
+  },
+  header: {
     backgroundColor: "#fff",
+    paddingTop: Platform.OS === "ios" ? 50 : 40,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f1f1f1",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 16,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 1,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   input: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
+    marginLeft: 10,
+    fontSize: 15,
+    color: "#333",
   },
   filterContainer: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  filtersWrapper: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 16,
+    justifyContent: "space-between",
   },
   filterButton: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 8,
+    backgroundColor: "#f5f5f5",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#eaeaea",
+    marginRight: 8,
+  },
+  filterIcon: {
+    marginRight: 5,
   },
   activeFilter: {
     backgroundColor: "#ff6f61",
+    borderColor: "#ff6f61",
   },
   activeFilterText: {
     color: "#fff",
   },
   filterText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#555",
+  },
+  resultsCountContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  resultsCount: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#777",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  productsList: {
+    padding: 8,
   },
   row: {
     justifyContent: "space-between",
-    marginBottom: 16,
   },
   productItem: {
-    flex: 1,
-    marginHorizontal: 8,
+    width: "48%",
+    marginHorizontal: "1%",
+    marginVertical: 8,
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 0,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    borderRadius: 12,
     overflow: "hidden",
-    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  imageContainer: {
+    width: "100%",
+    height: 160,
+    backgroundColor: "#f9f9f9",
+    overflow: "hidden",
   },
   productImage: {
-    width: 170,
-    height: 180,
+    width: "100%",
+    height: "100%",
     resizeMode: "cover",
-    marginBottom: 8,
   },
   productInfo: {
-    alignItems: "center",
+    padding: 12,
   },
   productName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
   },
   productPrice: {
     fontSize: 14,
     color: "#ff6f61",
     fontWeight: "bold",
-    marginVertical: 4,
+    marginBottom: 6,
   },
   productDescription: {
-    fontSize: 13,
-    color: "#666",
-    textAlign: "left",
-    marginHorizontal: 8,
-    marginBottom: 10,
-    lineHeight: 18,
+    fontSize: 12,
+    color: "#777",
+    lineHeight: 16,
   },
 });
 

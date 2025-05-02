@@ -12,21 +12,33 @@ import {
   Easing,
   ActivityIndicator,
   Dimensions,
+  ToastAndroid,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCart } from "../../context/CartContext"; // Import context
+import { useFavorites } from "../../context/FavoritesContext"; // Import favorites context
 
 const { width } = Dimensions.get("window");
 
 const ProductDetailScreen = ({ route, navigation }) => {
   const { product } = route.params || {}; // Kiểm tra product có tồn tại không
   const { cart, addToCart } = useCart(); // Lấy giỏ hàng từ context
+  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites(); // Lấy favorites từ context
   const [showFlyImage, setShowFlyImage] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavoriteProduct, setIsFavoriteProduct] = useState(false);
 
   // Animation
   const animatedValue = useRef(new Animated.Value(1)).current;
   const flyAnimation = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+
+  // Cập nhật trạng thái yêu thích khi component mount
+  useEffect(() => {
+    if (product && product.id) {
+      const favoriteStatus = isFavorite(product.id);
+      setIsFavoriteProduct(favoriteStatus);
+    }
+  }, [product, isFavorite]);
 
   const handleAddToCart = (event) => {
     if (!product) return; // Tránh lỗi khi product chưa có dữ liệu
@@ -76,7 +88,17 @@ const ProductDetailScreen = ({ route, navigation }) => {
   // };
 
   const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
+    if (!product || !product.id) return;
+
+    if (isFavoriteProduct) {
+      removeFromFavorites(product.id);
+      ToastAndroid.show("Đã xóa khỏi danh sách yêu thích", ToastAndroid.SHORT);
+    } else {
+      addToFavorites(product);
+      ToastAndroid.show("Đã thêm vào danh sách yêu thích", ToastAndroid.SHORT);
+    }
+
+    setIsFavoriteProduct(!isFavoriteProduct);
   };
 
   if (!product) {
@@ -119,9 +141,9 @@ const ProductDetailScreen = ({ route, navigation }) => {
           <TouchableOpacity style={styles.iconButton} onPress={toggleFavorite}>
             <View style={styles.iconCircle}>
               <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
+                name={isFavoriteProduct ? "heart" : "heart-outline"}
                 size={22}
-                color={isFavorite ? "#FF5252" : "#F08080"}
+                color={isFavoriteProduct ? "#FF5252" : "#F08080"}
               />
             </View>
           </TouchableOpacity>
